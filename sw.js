@@ -1,4 +1,4 @@
-const V = 'nutri-v1';
+const V = 'nutri-v2';
 const CORE = ['./', 'index.html', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png'];
 const EXT = [
   'https://cdn.tailwindcss.com/3.4.17',

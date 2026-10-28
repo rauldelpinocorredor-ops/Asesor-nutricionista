@@ -62,11 +62,18 @@ input,select,button{font-size:16px} /* evita zoom en iOS */
 <!-- CHEF -->
 <section id="s-chef" class="tab">
   <div class="bg-white rounded-2xl shadow-sm p-4 border">
-    <h2 class="font-bold text-slate-700 mb-1"><i class="fa-solid fa-kitchen-set text-emerald-600 mr-2"></i>Chef familiar</h2>
-    <p class="text-xs text-slate-500 mb-3">Elige 2 o más ingredientes de tu despensa:</p>
+    <div class="flex justify-between items-center mb-1">
+      <h2 class="font-bold text-slate-700"><i class="fa-solid fa-kitchen-set text-emerald-600 mr-2"></i>Chef familiar</h2>
+      <button onclick="formReceta()" class="text-xs bg-slate-800 text-white px-3 py-2 rounded-lg font-medium">+ Mi receta</button>
+    </div>
+    <p class="text-xs text-slate-500 mb-3">Elige ingredientes de tu despensa (2 o más para buscar en mis recetas; 1 o más para preguntar a una IA):</p>
     <div id="chef-sel" class="flex flex-wrap gap-2 mb-4 p-3 bg-slate-50 rounded-xl min-h-[50px]"></div>
-    <button onclick="buscarRecetas()" class="w-full bg-emerald-600 text-white py-2.5 rounded-xl font-medium mb-4">Cocinar con lo seleccionado</button>
-    <div id="chef-res" class="space-y-3"></div>
+    <div class="grid grid-cols-2 gap-2 mb-2">
+      <button onclick="buscarRecetas()" class="bg-emerald-600 text-white py-2.5 rounded-xl font-medium text-sm">Buscar recetas</button>
+      <button onclick="abrirIA()" class="bg-indigo-600 text-white py-2.5 rounded-xl font-medium text-sm"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i>Preguntar a una IA</button>
+    </div>
+    <button onclick="buscarRecetas(true)" class="w-full text-xs text-slate-500 underline mb-3">Ver todas las recetas (mías y de ejemplo)</button>
+    <div id="chef-res" class="space-y-2"></div>
   </div>
 </section>
 
@@ -136,11 +143,56 @@ input,select,button{font-size:16px} /* evita zoom en iOS */
   <button onclick="tab('training')" id="n-training" class="flex flex-col items-center text-slate-400"><i class="fa-solid fa-dumbbell text-lg"></i><span class="text-[10px] font-bold">Training</span></button>
 </nav>
 
+<!-- Temporizadores -->
+<div id="timers" class="fixed left-0 right-0 z-[60] px-3 space-y-1" style="bottom:calc(4.5rem + env(safe-area-inset-bottom))"></div>
+
 <!-- Modal receta -->
-<div id="m-receta" class="fixed inset-0 bg-black/50 hidden z-50 items-center justify-center p-4">
-  <div class="bg-white rounded-2xl max-w-lg w-full p-5 max-h-[85vh] overflow-y-auto">
-    <div class="flex justify-between mb-3"><h3 id="m-tit" class="font-bold text-lg"></h3><button onclick="cerrar('m-receta')" class="text-slate-400 text-xl"><i class="fa-solid fa-xmark"></i></button></div>
-    <div id="m-cuerpo" class="text-sm text-slate-600 space-y-2"></div>
+<div id="m-receta" class="fixed inset-0 bg-black/50 hidden z-50 items-end sm:items-center justify-center">
+  <div class="bg-white rounded-t-2xl sm:rounded-2xl max-w-lg w-full p-5 max-h-[90vh] overflow-y-auto">
+    <div class="flex justify-between mb-2"><h3 id="m-tit" class="font-bold text-lg"></h3><button onclick="cerrar('m-receta')" class="text-slate-400 text-xl"><i class="fa-solid fa-xmark"></i></button></div>
+    <div id="m-cuerpo" class="text-sm text-slate-600 space-y-1"></div>
+    <div id="m-acc" class="flex gap-2 mt-4 mb-16"></div>
+  </div>
+</div>
+
+<!-- Modal formulario receta -->
+<div id="m-form" class="fixed inset-0 bg-black/50 hidden z-50 items-end sm:items-center justify-center">
+  <div class="bg-white rounded-t-2xl sm:rounded-2xl max-w-lg w-full p-5 max-h-[92vh] overflow-y-auto">
+    <div class="flex justify-between mb-2"><h3 class="font-bold">Mi receta</h3><button onclick="cerrar('m-form')" class="text-slate-400 text-xl"><i class="fa-solid fa-xmark"></i></button></div>
+    <input id="rf-n" placeholder="Nombre de la receta" class="w-full p-2 border rounded-lg text-sm mb-2">
+    <textarea id="rf-i" rows="4" placeholder="Ingredientes (uno por línea)&#10;200 g de arroz&#10;1 cebolla" class="w-full p-2 border rounded-lg text-sm mb-2"></textarea>
+    <textarea id="rf-p" rows="6" placeholder="Pasos (uno por línea)&#10;Sofríe la cebolla 5 min&#10;Añade el arroz y cuece 18 min" class="w-full p-2 border rounded-lg text-sm mb-1"></textarea>
+    <p class="text-[11px] text-slate-400 mb-3">Si un paso incluye un tiempo (por ejemplo «10 min» o «3-4 minutos»), aparecerá un botón de temporizador.</p>
+    <button onclick="guardarForm()" class="w-full bg-emerald-600 text-white py-2.5 rounded-xl font-bold text-sm">Guardar receta</button>
+  </div>
+</div>
+
+<!-- Modal IA -->
+<div id="m-ia" class="fixed inset-0 bg-black/50 hidden z-50 items-end sm:items-center justify-center">
+  <div class="bg-white rounded-t-2xl sm:rounded-2xl max-w-lg w-full p-5 max-h-[92vh] overflow-y-auto text-sm">
+    <div class="flex justify-between mb-2"><h3 class="font-bold"><i class="fa-solid fa-wand-magic-sparkles text-indigo-600 mr-1"></i>Receta con IA</h3><button onclick="cerrar('m-ia')" class="text-slate-400 text-xl"><i class="fa-solid fa-xmark"></i></button></div>
+    <p class="text-xs text-slate-500 mb-1">Ingredientes marcados:</p>
+    <p id="ia-res" class="text-xs bg-slate-50 rounded-lg p-2 mb-3"></p>
+    <div class="grid grid-cols-3 gap-2 mb-2 text-xs font-bold text-slate-600">
+      <label>Comensales<input type="number" id="ia-pers" value="2" min="1" max="12" class="w-full p-2 border rounded-lg mt-1 font-normal text-sm"></label>
+      <label class="col-span-2">Notas (opcional)<input id="ia-notas" placeholder="rápido, sin gluten…" class="w-full p-2 border rounded-lg mt-1 font-normal text-sm"></label>
+    </div>
+    <label class="flex items-center gap-2 text-xs mb-3"><input type="checkbox" id="ia-basic" checked class="accent-indigo-600">Permitir básicos de cocina (aceite, sal, agua, especias)</label>
+    <div class="border rounded-xl p-3 mb-3">
+      <p class="font-bold mb-1">Opción A · Con clave de API de Anthropic</p>
+      <p class="text-[11px] text-slate-500 mb-2">La clave se guarda solo en este navegador (si marcas «recordar») y se envía directamente a Anthropic. Cualquiera con acceso a este móvil/navegador podría leerla: crea una clave exclusiva para esto. El uso de la API se factura aparte de una suscripción a Claude.</p>
+      <input type="password" id="ia-key" placeholder="sk-ant-…" autocomplete="off" class="w-full p-2 border rounded-lg text-sm mb-2">
+      <label class="flex items-center gap-2 text-xs mb-2"><input type="checkbox" id="ia-rec" class="accent-indigo-600">Recordar clave en este dispositivo <span id="ia-tk" class="text-slate-400"></span></label>
+      <div class="flex gap-2"><button onclick="pedirIA()" class="flex-1 bg-indigo-600 text-white py-2 rounded-lg font-bold text-xs">Pedir receta</button><button onclick="borrarKey()" class="px-3 bg-slate-100 rounded-lg text-xs">Borrar clave</button></div>
+    </div>
+    <div class="border rounded-xl p-3 mb-2">
+      <p class="font-bold mb-1">Opción B · Sin clave (con tu app de Claude)</p>
+      <p class="text-[11px] text-slate-500 mb-2">Copia la petición, pégala en Claude, y pega aquí su respuesta.</p>
+      <button onclick="copiarPrompt()" class="w-full bg-slate-800 text-white py-2 rounded-lg font-bold text-xs mb-2">Copiar petición</button>
+      <textarea id="ia-resp" rows="3" placeholder="Pega aquí la respuesta de Claude" class="w-full p-2 border rounded-lg text-xs mb-2"></textarea>
+      <button onclick="importarIA()" class="w-full bg-emerald-600 text-white py-2 rounded-lg font-bold text-xs">Importar receta</button>
+    </div>
+    <p id="ia-estado" class="text-xs text-slate-500"></p>
   </div>
 </div>
 
@@ -198,7 +250,7 @@ const CATS = {general:'Despensa', congelados:'Congelados', limpieza:'Limpieza', 
 
 let S = {};
 try { S = JSON.parse(localStorage.getItem(KEY)) || {}; } catch(e) {}
-S.inv = S.inv || []; S.dep = S.dep || []; S.sub = S.sub || 'general'; S.mat = S.mat || ['Mancuernas','Bandas','Esterilla','Peso corporal'];
+S.inv = S.inv || []; S.rec = S.rec || []; S.dep = S.dep || []; S.sub = S.sub || 'general'; S.mat = S.mat || ['Mancuernas','Bandas','Esterilla','Peso corporal'];
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e) {} };
 
 /* ---------- Navegación ---------- */
@@ -386,28 +438,164 @@ async function procesarCodigo(raw) {
 }
 
 /* ---------- Chef ---------- */
+const MODELO_IA = 'claude-haiku-5-5';
+const sinAc = t => String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+const minDe = t => { const m = /(\d+)(?:\s*-\s*(\d+))?\s*(?:min|minutos)\b/i.exec(t || ''); return m ? +(m[2] || m[1]) : null; };
+const lineas = t => String(t || '').split('\n').map(x => x.trim()).filter(Boolean);
 const RECETAS = [
-  { n: 'Arroz con pollo', k: ['pollo', 'arroz'], p: ['Dora el pollo en una sartén con aceite.', 'Añade el arroz y rehoga 1 min.', 'Cubre con caldo (2 partes por 1 de arroz) y cuece 18 min.', 'Reposa 5 min y sirve.'] },
-  { n: 'Pasta con tomate', k: ['pasta', 'tomate'], p: ['Cuece la pasta según el envase.', 'Calienta el tomate con una pizca de sal.', 'Mezcla y sirve.'] },
-  { n: 'Tortilla de patata', k: ['huevo', 'patata'], p: ['Pocha la patata en rodajas finas en aceite.', 'Mezcla con los huevos batidos.', 'Cuaja 3-4 min por lado.'] },
-  { n: 'Revuelto de huevo y verdura', k: ['huevo', 'verdura', 'espinaca', 'champi'], p: ['Saltea la verdura 3 min.', 'Añade los huevos batidos y remueve a fuego suave.'] },
-  { n: 'Salteado de pollo y verduras', k: ['pollo', 'verdura', 'pimiento', 'cebolla'], p: ['Corta todo en tiras.', 'Saltea el pollo a fuego fuerte.', 'Añade la verdura y cocina 5 min.'] },
-  { n: 'Pizza casera rápida', k: ['pizza', 'queso'], p: ['Precalienta el horno según el envase.', 'Añade queso extra si quieres.', 'Hornea hasta que esté dorada.'] }
-];
+ ['Arroz con pollo','pollo,arroz',['Dora el pollo troceado en una sartén con aceite 6 min.','Añade el arroz y rehoga 1 min.','Cubre con caldo (2 partes por 1 de arroz) y cuece 18 min.','Deja reposar 5 min y sirve.']],
+ ['Pasta con tomate','pasta,tomate',['Cuece la pasta según el envase (unos 10 min).','Calienta el tomate con una pizca de sal 5 min.','Mezcla y sirve.']],
+ ['Tortilla de patata','huevo,patata',['Pocha la patata en rodajas finas en aceite 15 min.','Mezcla con los huevos batidos.','Cuaja 3-4 min por cada lado.']],
+ ['Revuelto de verduras','huevo,verdura,espinaca,champi,calabac',['Saltea la verdura troceada 5 min.','Añade los huevos batidos y remueve a fuego suave 2 min.']],
+ ['Salteado de pollo y verduras','pollo,verdura,pimiento,cebolla,calabac',['Corta todo en tiras.','Saltea el pollo a fuego fuerte 6 min.','Añade la verdura y cocina 5 min más.']],
+ ['Pizza rápida','pizza,queso',['Precalienta el horno a 220 °C.','Añade queso extra si quieres.','Hornea 10-12 min hasta que esté dorada.']],
+ ['Lentejas estofadas','lenteja,zanahoria,patata,cebolla',['Sofríe cebolla y zanahoria 8 min.','Añade las lentejas, la patata en dados y cubre con agua.','Cuece tapado 30 min (20 min en olla exprés).','Rectifica de sal y sirve.']],
+ ['Garbanzos con espinacas','garbanzo,espinaca,ajo',['Dora el ajo laminado 1 min.','Añade las espinacas y saltea 3 min.','Incorpora los garbanzos cocidos y cuece 5 min.']],
+ ['Merluza al horno con patatas','merluza,pescado,patata,limon',['Precalienta el horno a 200 °C.','Hornea las patatas en rodajas con aceite 20 min.','Coloca el pescado encima con limón y hornea 12 min.']],
+ ['Salmón a la plancha con verduras','salmon,verdura,brocoli,esparrago',['Saltea la verdura 6 min.','Cocina el salmón en plancha 4 min por el lado de la piel.','Dale la vuelta y cocina 2-3 min más.']],
+ ['Pasta con atún','pasta,atun,tomate',['Cuece la pasta 10 min.','Calienta el tomate con el atún escurrido 5 min.','Mezcla con la pasta y sirve.']],
+ ['Macarrones con carne','pasta,macarron,carne,ternera,tomate',['Sofríe la carne picada 8 min.','Añade el tomate y cuece 10 min.','Cuece los macarrones 10 min y mezcla.']],
+ ['Arroz tres delicias','arroz,huevo,jamon,guisante,zanahoria',['Cuece el arroz 15 min y escúrrelo.','Saltea guisantes, zanahoria y jamón 5 min.','Añade el huevo revuelto y el arroz y saltea 3 min.']],
+ ['Crema de calabacín','calabac,patata,cebolla,queso',['Pocha la cebolla 5 min.','Añade calabacín y patata troceados, cubre con agua y cuece 20 min.','Tritura y añade el queso.']],
+ ['Sopa de pollo con fideos','pollo,fideo,zanahoria,puerro',['Cuece el pollo con zanahoria y puerro en agua 25 min.','Añade los fideos y cuece 5 min.','Desmenuza el pollo y sirve.']],
+ ['Hamburguesas caseras','carne,ternera,picada,pan,huevo',['Mezcla la carne con sal y un huevo; forma las hamburguesas.','Cocina a la plancha 4 min por lado.','Sirve en el pan.']],
+ ['Pollo al horno con patatas','pollo,patata,ajo,limon',['Precalienta el horno a 190 °C.','Coloca pollo y patatas con ajo, limón y aceite.','Hornea 50 min dándoles la vuelta a mitad.']],
+ ['Huevos al plato con tomate','huevo,tomate',['Calienta el tomate en una cazuela de horno 5 min.','Casca los huevos encima.','Hornea 8-10 min a 200 °C.']],
+ ['Ensalada de pasta','pasta,atun,tomate,maiz,huevo',['Cuece la pasta 10 min y enfríala con agua.','Cuece los huevos 10 min.','Mezcla todo con tomate, maíz y atún; aliña.']],
+ ['Quesadillas','tortilla,queso,pollo,pimiento',['Saltea pollo y pimiento troceados 6 min.','Rellena la tortilla con queso y el salteado.','Dora 2 min por cada lado.']],
+ ['Avena con fruta','avena,leche,platano,fruta',['Calienta la leche con la avena 5 min removiendo.','Añade la fruta troceada y sirve.']],
+ ['Tostadas de aguacate y huevo','pan,aguacate,huevo',['Tuesta el pan 2 min.','Cocina el huevo a la plancha 3 min.','Aplasta el aguacate sobre el pan y corona con el huevo.']],
+ ['Albóndigas en salsa','carne,picada,tomate,huevo,pan',['Mezcla carne, huevo y pan rallado; forma bolas.','Dóralas 5 min en sartén.','Cuece en salsa de tomate 15 min.']],
+ ['Judías verdes con patata y huevo','judia,patata,huevo',['Cuece judías y patata en dados 20 min.','Cuece el huevo 10 min.','Escurre, aliña y sirve con el huevo picado.']],
+ ['Brócoli gratinado','brocoli,coliflor,queso,leche',['Cuece el brócoli 6 min.','Colócalo en una fuente con leche y queso.','Gratina en el horno 8 min a 220 °C.']],
+ ['Crepes','harina,huevo,leche',['Bate harina, huevos y leche hasta que no haya grumos; reposa 15 min.','Cocina una cucharada en sartén caliente 1-2 min por lado.']],
+ ['Cuscús con verduras','cuscus,verdura,garbanzo',['Hidrata el cuscús con agua caliente 5 min.','Saltea la verdura 6 min con los garbanzos.','Mezcla y sirve.']],
+ ['Pollo al curry con arroz','pollo,curry,arroz,coco,cebolla',['Cuece el arroz 15 min.','Sofríe cebolla y pollo 8 min con curry.','Añade leche de coco y cuece 10 min; sirve con el arroz.']]
+].map(([n, k, p], i) => ({ id: 'b' + i, n, k: k.split(','), p: p.map(t => ({ t, m: minDe(t) })) }));
+
+const todas = () => [...S.rec, ...RECETAS];
+let RIA = null, VR = null, editId = null;
+const getRec = id => id === 'ia' ? RIA : todas().find(r => r.id === id);
+const clavesDe = r => r.k || (r.i || []).map(x => sinAc(x).replace(/^[\d.,\/\s]*(kg|g|ml|l|cucharadas?|cucharaditas?|cdas?|cdtas?|uds?|unidades?|dientes?|lonchas?|latas?)?\s*(de\s+)?/, '').trim()).filter(k => k.length > 2);
+const selActual = () => [...document.querySelectorAll('#chef-sel input:checked')].map(c => c.value);
+
 function selectorChef() {
   const it = S.inv.filter(i => i.cat === 'general' || i.cat === 'congelados');
-  $('chef-sel').innerHTML = it.length ? it.map(i => `<label class="text-xs bg-white border rounded-full px-3 py-1.5"><input type="checkbox" value="${esc(i.n.toLowerCase())}" class="accent-emerald-600 mr-1">${esc(i.n)}</label>`).join('') : '<span class="text-xs text-slate-400">Añade productos a la despensa.</span>';
+  $('chef-sel').innerHTML = it.length ? it.map(i => `<label class="text-xs bg-white border rounded-full px-3 py-1.5"><input type="checkbox" value="${esc(i.n)}" class="accent-emerald-600 mr-1">${esc(i.n)}</label>`).join('') : '<span class="text-xs text-slate-400">Añade productos a la despensa.</span>';
 }
-function buscarRecetas() {
-  const sel = [...document.querySelectorAll('#chef-sel input:checked')].map(c => c.value);
-  if (sel.length < 2) return ($('chef-res').innerHTML = '<p class="text-xs text-amber-600">Selecciona al menos 2 ingredientes.</p>');
-  const r = RECETAS.map(x => ({ x, c: x.k.filter(k => sel.some(s => s.includes(k))).length })).filter(o => o.c >= 2).sort((a, b) => b.c - a.c);
-  $('chef-res').innerHTML = r.length ? r.map(({ x }) => `<button onclick="verReceta('${esc(x.n)}')" class="w-full text-left bg-emerald-50 border border-emerald-100 rounded-xl p-3 font-medium text-emerald-800">${esc(x.n)}</button>`).join('') : '<p class="text-xs text-slate-500">Ninguna receta de mi base coincide con esa combinación.</p>';
+function buscarRecetas(todo) {
+  const sel = selActual().map(sinAc).filter(x => x.length > 2); let r;
+  if (todo) r = todas().map(x => ({ x }));
+  else {
+    if (sel.length < 2) return ($('chef-res').innerHTML = '<p class="text-xs text-amber-600">Selecciona al menos 2 ingredientes.</p>');
+    r = todas().map(x => ({ x, c: clavesDe(x).filter(k => sel.some(s => s.includes(k) || k.includes(s))).length })).filter(o => o.c >= 2).sort((a, b) => b.c - a.c);
+  }
+  $('chef-res').innerHTML = r.length ? r.map(({ x }) => `<button onclick="verReceta('${x.id}')" class="w-full text-left bg-emerald-50 border border-emerald-100 rounded-xl p-3 font-medium text-emerald-800 text-sm">${x.id[0] === 'c' ? '<i class="fa-solid fa-user mr-1 text-xs"></i>' : ''}${esc(x.n)}</button>`).join('')
+    : '<p class="text-xs text-slate-500">Ninguna receta coincide. Prueba a <button onclick="abrirIA()" class="underline text-indigo-600">preguntar a una IA</button> o añade la tuya.</p>';
 }
-function verReceta(n) {
-  const r = RECETAS.find(x => x.n === n); $('m-tit').textContent = r.n;
-  $('m-cuerpo').innerHTML = r.p.map((p, i) => `<p><b>${i + 1}.</b> ${esc(p)}</p>`).join(''); abrir('m-receta');
+function verReceta(id) {
+  const r = getRec(id); if (!r) return; VR = r; $('m-tit').textContent = r.n;
+  let h = '';
+  if (id === 'ia') h += '<p class="text-[11px] bg-amber-50 border border-amber-200 rounded-lg p-2 mb-2">Receta generada por IA: revisa alérgenos, cantidades y tiempos de cocción antes de cocinar (sobre todo si es para bebés).</p>';
+  if (r.rac) h += `<p class="text-xs text-slate-400">${esc(r.rac)} raciones</p>`;
+  h += r.i && r.i.length ? `<div class="bg-slate-50 rounded-xl p-3 text-xs mb-2"><p class="font-bold mb-1">Ingredientes</p>${r.i.map(x => `<p>• ${esc(x)}</p>`).join('')}</div>`
+    : `<p class="text-xs text-slate-400 mb-2">Ingredientes principales: ${esc(r.k.join(', '))}. Ajusta las cantidades a tu gusto.</p>`;
+  h += r.p.map((st, i) => `<div class="flex gap-2 items-start py-1.5"><input type="checkbox" class="mt-0.5 w-5 h-5 accent-emerald-600 shrink-0" onchange="this.nextElementSibling.classList.toggle('line-through',this.checked)"><div class="flex-1"><p><b>${i + 1}.</b> ${esc(st.t)}</p>${st.m ? `<button onclick="iniciarTimerPaso(${i})" class="mt-1 text-xs bg-emerald-600 text-white rounded-full px-3 py-1 font-bold"><i class="fa-solid fa-stopwatch mr-1"></i>Temporizador ${st.m} min</button>` : ''}</div></div>`).join('');
+  $('m-cuerpo').innerHTML = h;
+  $('m-acc').innerHTML = id === 'ia' ? '<button onclick="guardarIA()" class="flex-1 bg-emerald-600 text-white py-2.5 rounded-xl font-bold text-sm">Guardar en mis recetas</button>'
+    : id[0] === 'c' ? `<button onclick="formReceta('${id}')" class="flex-1 bg-slate-100 py-2.5 rounded-xl font-bold text-sm">Editar</button><button onclick="borrarReceta('${id}')" class="px-4 bg-red-50 text-red-600 py-2.5 rounded-xl font-bold text-sm">Eliminar</button>` : '';
+  abrir('m-receta');
 }
+
+/* Recetas propias */
+function formReceta(id) {
+  editId = id || null; const r = id ? getRec(id) : null;
+  $('rf-n').value = r ? r.n : ''; $('rf-i').value = r && r.i ? r.i.join('\n') : ''; $('rf-p').value = r ? r.p.map(x => x.t).join('\n') : '';
+  cerrar('m-receta'); abrir('m-form');
+}
+function guardarForm() {
+  const n = $('rf-n').value.trim(), i = lineas($('rf-i').value), p = lineas($('rf-p').value);
+  if (!n || !p.length) return alert('Pon un nombre y al menos un paso.');
+  const r = { id: editId || 'c' + Date.now(), n, i, p: p.map(t => ({ t, m: minDe(t) })) };
+  S.rec = editId ? S.rec.map(x => x.id === editId ? r : x) : [...S.rec, r];
+  save(); cerrar('m-form'); verReceta(r.id);
+}
+function borrarReceta(id) { if (confirm('¿Eliminar esta receta?')) { S.rec = S.rec.filter(x => x.id !== id); save(); cerrar('m-receta'); $('chef-res').innerHTML = ''; } }
+function guardarIA() { const r = { ...RIA, id: 'c' + Date.now() }; S.rec.push(r); save(); verReceta(r.id); }
+
+/* ---------- Temporizadores ---------- */
+let TM = [], tmInt = null, AC = null, WL = null, tid = 0;
+function iniciarTimerPaso(i) { iniciarTimer(VR.n + ' · paso ' + (i + 1), VR.p[i].m); }
+function iniciarTimer(label, min) {
+  try { AC = AC || new (window.AudioContext || window.webkitAudioContext)(); if (AC.state === 'suspended') AC.resume(); } catch (e) {}
+  TM.push({ id: ++tid, label, fin: Date.now() + min * 60000, done: false, last: 0 });
+  if (!tmInt) tmInt = setInterval(tick, 1000);
+  try { if ('wakeLock' in navigator && !WL) navigator.wakeLock.request('screen').then(w => { WL = w; w.addEventListener('release', () => { WL = null; }); }).catch(() => {}); } catch (e) {}
+  pintaTimers();
+}
+function pitar() {
+  try { [0, .35, .7].forEach(d => { const o = AC.createOscillator(), g = AC.createGain(); o.frequency.value = 880; g.gain.value = .2; o.connect(g); g.connect(AC.destination); o.start(AC.currentTime + d); o.stop(AC.currentTime + d + .2); }); } catch (e) {}
+  if (navigator.vibrate) navigator.vibrate([300, 150, 300]);
+}
+function tick() { const now = Date.now(); TM.forEach(t => { if (now >= t.fin) { t.done = true; if (now - t.last > 4000) { t.last = now; pitar(); } } }); pintaTimers(); }
+function quitarTimer(id) { TM = TM.filter(t => t.id !== id); if (!TM.length) { clearInterval(tmInt); tmInt = null; if (WL) { WL.release().catch(() => {}); WL = null; } } pintaTimers(); }
+function masUno(id) { const t = TM.find(x => x.id === id); if (t) { t.fin = Math.max(t.fin, Date.now()) + 60000; t.done = false; } pintaTimers(); }
+function pintaTimers() {
+  $('timers').innerHTML = TM.map(t => { const s = Math.max(0, Math.ceil((t.fin - Date.now()) / 1000));
+    return `<div class="flex items-center justify-between rounded-xl shadow-lg px-3 py-2 text-sm text-white ${t.done ? 'bg-red-600 animate-pulse' : 'bg-slate-900'}"><span class="truncate pr-2">${esc(t.label)}</span><span class="font-mono font-bold">${t.done ? '¡Listo!' : Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0')}</span><span class="flex gap-3 ml-3 items-center"><button onclick="masUno(${t.id})" class="text-xs bg-white/20 rounded px-2 py-0.5">+1</button><button onclick="quitarTimer(${t.id})"><i class="fa-solid fa-xmark"></i></button></span></div>`; }).join('');
+}
+
+/* ---------- Receta con IA ---------- */
+const IAK = 'asesor_nutri_ia_key';
+const getKey = () => { try { return localStorage.getItem(IAK) || ''; } catch (e) { return ''; } };
+function abrirIA() {
+  const sel = selActual(); if (!sel.length) return alert('Marca al menos 1 ingrediente de la despensa.');
+  $('ia-res').textContent = sel.join(', '); $('ia-estado').textContent = ''; $('ia-key').value = ''; $('ia-resp').value = '';
+  $('ia-tk').textContent = getKey() ? '(ya hay una guardada)' : ''; abrir('m-ia');
+}
+function promptIA() {
+  const notas = $('ia-notas').value.trim();
+  return `Eres un chef. Dame UNA receta casera para ${+$('ia-pers').value || 2} personas usando principalmente estos ingredientes que tengo: ${selActual().join(', ')}. ` +
+    ($('ia-basic').checked ? 'Puedes añadir básicos de cocina (aceite, sal, agua, especias comunes). ' : 'Usa solo esos ingredientes. ') + (notas ? `Notas: ${notas}. ` : '') +
+    `Responde SOLO con JSON válido, sin texto adicional, con este formato exacto: {"nombre":"...","raciones":2,"ingredientes":["200 g de arroz"],"pasos":[{"texto":"...","minutos":10}]}. ` +
+    `Cada paso que implique cocción o espera debe llevar "minutos" (número entero); si no hay tiempo, usa null. Pasos cortos y claros. Si algún ingrediente es alérgeno común, indícalo en el último paso.`;
+}
+function parseReceta(txt) {
+  const a = txt.indexOf('{'), b = txt.lastIndexOf('}'); if (a < 0 || b <= a) throw new Error('No encuentro una receta en JSON en esa respuesta.');
+  const j = JSON.parse(txt.slice(a, b + 1));
+  const p = (Array.isArray(j.pasos) ? j.pasos : []).slice(0, 30).map(x => {
+    let t = String(typeof x === 'string' ? x : (x && x.texto) || '').trim().slice(0, 400);
+    const m0 = x && typeof x === 'object' ? Math.round(+x.minutos) : NaN;
+    if (Number.isFinite(m0) && m0 > 0 && m0 <= 600 && !minDe(t)) t += ` (${m0} min)`;
+    return { t, m: minDe(t) };
+  }).filter(x => x.t);
+  if (!j.nombre || !p.length) throw new Error('La receta está incompleta.');
+  return { id: 'ia', n: String(j.nombre).slice(0, 80), rac: j.raciones ? String(j.raciones).slice(0, 10) : '', i: (Array.isArray(j.ingredientes) ? j.ingredientes : []).slice(0, 40).map(x => String(x).slice(0, 120)), p };
+}
+async function pedirIA() {
+  const typed = $('ia-key').value.trim(), key = typed || getKey();
+  if (!key) return ($('ia-estado').textContent = 'Introduce tu clave de API, o usa la opción B.');
+  if (typed && $('ia-rec').checked) { try { localStorage.setItem(IAK, typed); } catch (e) {} }
+  $('ia-estado').textContent = 'Preguntando a Claude…';
+  try {
+    const r = await fetch('https://api.anthropic.com/v1/messages', { method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+      body: JSON.stringify({ model: MODELO_IA, max_tokens: 1500, messages: [{ role: 'user', content: promptIA() }] }) });
+    const j = await r.json();
+    if (!r.ok) throw new Error((j.error && j.error.message) || 'Error ' + r.status);
+    RIA = parseReceta((j.content || []).filter(c => c.type === 'text').map(c => c.text).join('\n'));
+    cerrar('m-ia'); verReceta('ia');
+  } catch (e) { $('ia-estado').textContent = 'No se pudo obtener la receta: ' + e.message; }
+}
+function importarIA() {
+  try { RIA = parseReceta($('ia-resp').value); cerrar('m-ia'); verReceta('ia'); }
+  catch (e) { $('ia-estado').textContent = 'No se pudo importar: ' + e.message; }
+}
+async function copiarPrompt() {
+  try { await navigator.clipboard.writeText(promptIA()); $('ia-estado').textContent = 'Petición copiada. Pégala en Claude y luego pega aquí su respuesta.'; }
+  catch (e) { $('ia-resp').value = promptIA(); $('ia-estado').textContent = 'No pude copiar automáticamente: la petición está en el cuadro de abajo; cópiala a mano.'; }
+}
+function borrarKey() { try { localStorage.removeItem(IAK); } catch (e) {} $('ia-key').value = ''; $('ia-tk').textContent = ''; $('ia-estado').textContent = 'Clave borrada de este dispositivo.'; }
 
 /* ---------- Nutrición ---------- */
 function subNutri(s) {
