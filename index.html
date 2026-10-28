@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#059669">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="AsesorNutri">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Asesor Nutricionista</title>
+<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+.tab{display:none}.tab.active{display:block}
+body{padding-top:env(safe-area-inset-top);padding-bottom:calc(5rem + env(safe-area-inset-bottom))}
+nav{padding-bottom:calc(.5rem + env(safe-area-inset-bottom))}
+input,select,button{font-size:16px} /* evita zoom en iOS */
+</style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans">
+
+<header class="bg-emerald-600 text-white p-4 shadow-md sticky top-0 z-40 flex justify-between items-center">
+  <h1 class="text-lg font-bold"><i class="fa-solid fa-utensils mr-2"></i>Asesor Nutricionista</h1>
+  <span class="text-xs bg-emerald-700 px-3 py-1 rounded-full">Familiar</span>
+</header>
+
+<main class="max-w-3xl mx-auto p-4">
+
+<!-- DESPENSA -->
+<section id="s-despensa" class="tab active">
+  <div class="bg-white rounded-2xl shadow-sm p-4 mb-4 border">
+    <div class="flex justify-between items-center mb-3">
+      <h2 class="font-bold text-slate-700"><i class="fa-solid fa-boxes-stacked text-emerald-600 mr-2"></i>Despensa y hogar</h2>
+      <button onclick="abrirScanner()" class="bg-slate-800 text-white px-3 py-2 rounded-lg text-xs font-medium"><i class="fa-solid fa-barcode mr-1"></i>Escanear</button>
+    </div>
+    <div id="subtabs" class="flex gap-2 overflow-x-auto pb-3 mb-3 border-b text-sm"></div>
+    <div class="bg-slate-50 p-3 rounded-xl mb-4 grid grid-cols-1 sm:grid-cols-4 gap-2">
+      <input id="p-nombre" placeholder="Producto…" class="p-2 border rounded-lg bg-white">
+      <select id="p-cat" class="p-2 border rounded-lg bg-white">
+        <option value="general">Despensa general</option>
+        <option value="congelados">Congelados</option>
+        <option value="limpieza">Limpieza</option>
+        <option value="mascotas">Mascotas</option>
+      </select>
+      <input type="date" id="p-cad" class="p-2 border rounded-lg bg-white">
+      <button onclick="addProducto(false)" class="bg-emerald-600 text-white p-2 rounded-lg text-sm font-medium">Añadir</button>
+    </div>
+    <div id="lista" class="space-y-2"></div>
+  </div>
+  <div class="bg-emerald-50 rounded-2xl p-4 border border-emerald-100">
+    <h3 class="font-bold text-emerald-800 mb-1"><i class="fa-solid fa-tags mr-2"></i>Buscar la lista en tiendas online</h3>
+    <p class="text-xs text-slate-500 mb-3">Abre la búsqueda de cada producto de tu lista en la tienda. Los precios los ves directamente en su web (la app no los inventa).</p>
+    <div class="grid grid-cols-2 gap-3">
+      <button onclick="buscarTienda('carrefour')" class="bg-white border border-emerald-200 rounded-xl py-2 text-sm font-bold text-emerald-700">Carrefour</button>
+      <button onclick="buscarTienda('amazon')" class="bg-white border border-emerald-200 rounded-xl py-2 text-sm font-bold text-indigo-700">Amazon</button>
+    </div>
+  </div>
+</section>
+
+<!-- CHEF -->
+<section id="s-chef" class="tab">
+  <div class="bg-white rounded-2xl shadow-sm p-4 border">
+    <h2 class="font-bold text-slate-700 mb-1"><i class="fa-solid fa-kitchen-set text-emerald-600 mr-2"></i>Chef familiar</h2>
+    <p class="text-xs text-slate-500 mb-3">Elige 2 o más ingredientes de tu despensa:</p>
+    <div id="chef-sel" class="flex flex-wrap gap-2 mb-4 p-3 bg-slate-50 rounded-xl min-h-[50px]"></div>
+    <button onclick="buscarRecetas()" class="w-full bg-emerald-600 text-white py-2.5 rounded-xl font-medium mb-4">Cocinar con lo seleccionado</button>
+    <div id="chef-res" class="space-y-3"></div>
+  </div>
+</section>
+
+<!-- NUTRICIONISTA -->
+<section id="s-nutri" class="tab">
+  <div class="bg-white rounded-2xl shadow-sm p-4 border">
+    <h2 class="font-bold text-slate-700 mb-3"><i class="fa-solid fa-apple-whole text-emerald-600 mr-2"></i>Menús</h2>
+    <div class="flex gap-2 border-b pb-3 mb-4">
+      <button id="nb-adultos" onclick="subNutri('adultos')" class="px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm font-medium">Familiar</button>
+      <button id="nb-bebe" onclick="subNutri('bebe')" class="px-4 py-2 rounded-lg bg-slate-100 text-slate-600 text-sm font-medium">Bebé y escuela</button>
+    </div>
+    <div id="np-adultos">
+      <div class="grid grid-cols-3 gap-2 mb-3 text-xs font-bold text-slate-600">
+        <label>Comensales<input type="number" id="n-pers" value="2" min="1" max="8" class="w-full p-2 border rounded-lg mt-1 text-sm font-normal"></label>
+        <label>Duración<select id="n-dias" class="w-full p-2 border rounded-lg mt-1 text-sm font-normal"><option value="7">Semanal</option><option value="14">Quincenal</option></select></label>
+        <label>Kcal/día<input type="number" id="n-kcal" value="2000" min="1200" max="4000" class="w-full p-2 border rounded-lg mt-1 text-sm font-normal"></label>
+      </div>
+      <button onclick="menuAdultos()" class="w-full bg-emerald-600 text-white py-2 rounded-xl text-sm font-medium mb-3">Generar menú y cantidades</button>
+      <div id="n-res" class="space-y-2"></div>
+      <p class="text-[11px] text-slate-400 mt-3">Orientativo, no sustituye a un dietista-nutricionista. Cantidades en crudo por persona, escaladas de forma aproximada según las kcal indicadas.</p>
+    </div>
+    <div id="np-bebe" class="hidden">
+      <p class="text-xs text-slate-500 mb-3">Marca qué comidas hace el bebé en casa (la comida del cole se supone cubierta por la escuela):</p>
+      <div class="space-y-3 bg-slate-50 p-4 rounded-xl text-sm">
+        <label class="flex justify-between">Desayuno en casa<input type="checkbox" id="b-des" checked class="accent-emerald-600 w-5 h-5"></label>
+        <label class="flex justify-between">Merienda en casa<input type="checkbox" id="b-mer" checked class="accent-emerald-600 w-5 h-5"></label>
+        <label class="flex justify-between">Cena en casa<input type="checkbox" id="b-cen" checked class="accent-emerald-600 w-5 h-5"></label>
+      </div>
+      <button onclick="menuBebe()" class="w-full bg-emerald-600 text-white py-2 rounded-xl text-sm font-medium mt-4">Actualizar menú del bebé</button>
+      <div id="b-res" class="mt-4 space-y-2"></div>
+      <p class="text-[11px] text-slate-400 mt-3">Ideas generales. Consulta con su pediatra la introducción de alimentos y alergias.</p>
+    </div>
+  </div>
+</section>
+
+<!-- TRAINING -->
+<section id="s-training" class="tab">
+  <div class="bg-white rounded-2xl shadow-sm p-4 border">
+    <h2 class="font-bold text-slate-700 mb-3"><i class="fa-solid fa-dumbbell text-emerald-600 mr-2"></i>Training y deportes</h2>
+    <div class="mb-4 bg-slate-50 p-3 rounded-xl">
+      <p class="text-xs font-bold text-slate-600 mb-2">Material disponible:</p>
+      <div id="material" class="grid grid-cols-2 gap-2 text-xs"></div>
+    </div>
+    <div class="grid grid-cols-3 gap-2 mb-4">
+      <button onclick="rutina(15)" class="bg-slate-100 p-2 rounded-xl text-xs font-bold">15 min</button>
+      <button onclick="rutina(30)" class="bg-slate-100 p-2 rounded-xl text-xs font-bold">30 min</button>
+      <button onclick="rutina(45)" class="bg-slate-100 p-2 rounded-xl text-xs font-bold">45 min</button>
+    </div>
+    <div id="rutina" class="bg-emerald-50 p-4 rounded-xl mb-5 text-sm text-emerald-900">Elige una duración.</div>
+    <div class="border-t pt-4">
+      <h3 class="font-bold text-slate-700 text-sm mb-2">Registrar otro deporte</h3>
+      <div class="grid grid-cols-3 gap-2 mb-2">
+        <select id="d-tipo" class="p-2 border rounded-lg bg-white text-sm"><option>Pádel</option><option>Running</option><option>Natación</option><option>Ciclismo</option><option>Yoga</option></select>
+        <input type="number" id="d-min" placeholder="Min" class="p-2 border rounded-lg text-sm">
+        <button onclick="addDeporte()" class="bg-slate-700 text-white p-2 rounded-lg text-sm">Añadir</button>
+      </div>
+      <div id="d-lista" class="space-y-1 text-xs text-slate-600"></div>
+    </div>
+  </div>
+</section>
+</main>
+
+<nav class="fixed bottom-0 inset-x-0 bg-white border-t py-2 px-4 flex justify-around shadow-lg z-40">
+  <button onclick="tab('despensa')" id="n-despensa" class="flex flex-col items-center text-emerald-600"><i class="fa-solid fa-basket-shopping text-lg"></i><span class="text-[10px] font-bold">Despensa</span></button>
+  <button onclick="tab('chef')" id="n-chef" class="flex flex-col items-center text-slate-400"><i class="fa-solid fa-kitchen-set text-lg"></i><span class="text-[10px] font-bold">Chef</span></button>
+  <button onclick="tab('nutri')" id="n-nutri" class="flex flex-col items-center text-slate-400"><i class="fa-solid fa-apple-whole text-lg"></i><span class="text-[10px] font-bold">Nutrición</span></button>
+  <button onclick="tab('training')" id="n-training" class="flex flex-col items-center text-slate-400"><i class="fa-solid fa-dumbbell text-lg"></i><span class="text-[10px] font-bold">Training</span></button>
+</nav>
+
+<!-- Modal receta -->
+<div id="m-receta" class="fixed inset-0 bg-black/50 hidden z-50 items-center justify-center p-4">
+  <div class="bg-white rounded-2xl max-w-lg w-full p-5 max-h-[85vh] overflow-y-auto">
+    <div class="flex justify-between mb-3"><h3 id="m-tit" class="font-bold text-lg"></h3><button onclick="cerrar('m-receta')" class="text-slate-400 text-xl"><i class="fa-solid fa-xmark"></i></button></div>
+    <div id="m-cuerpo" class="text-sm text-slate-600 space-y-2"></div>
+  </div>
+</div>
+
+<!-- Modal ficha -->
+<div id="m-ficha" class="fixed inset-0 bg-black/60 hidden z-50 items-end sm:items-center justify-center">
+  <div class="bg-white rounded-t-2xl sm:rounded-2xl max-w-lg w-full p-4 max-h-[92vh] overflow-y-auto">
+    <div class="flex justify-between mb-1"><h3 class="font-bold">Ficha del producto</h3><button onclick="cerrar('m-ficha')" class="text-slate-400 text-xl"><i class="fa-solid fa-xmark"></i></button></div>
+    <p id="f-aviso" class="text-xs text-slate-500 mb-2"></p>
+    <div class="flex gap-3 mb-3">
+      <img id="f-img" alt="" class="w-20 h-20 object-contain bg-slate-50 rounded hidden">
+      <div class="flex-1 space-y-2"><input id="f-n" placeholder="Nombre" class="w-full p-2 border rounded-lg text-sm"><input id="f-marca" placeholder="Marca" class="w-full p-2 border rounded-lg text-sm"></div>
+    </div>
+    <div class="grid grid-cols-2 gap-2 mb-2 text-xs font-bold text-slate-600">
+      <label>Cantidad<input id="f-cant" class="w-full p-2 border rounded-lg mt-1 font-normal text-sm"></label>
+      <label>Unidades<input type="number" id="f-ud" min="1" value="1" class="w-full p-2 border rounded-lg mt-1 font-normal text-sm"></label>
+      <label>Categoría<select id="f-cat" class="w-full p-2 border rounded-lg mt-1 font-normal text-sm bg-white"><option value="general">Despensa</option><option value="congelados">Congelados</option><option value="limpieza">Limpieza</option><option value="mascotas">Mascotas</option></select></label>
+      <label>Caducidad<input type="date" id="f-cad" class="w-full p-2 border rounded-lg mt-1 font-normal text-sm"></label>
+    </div>
+    <div class="flex gap-1 mb-3 text-[11px]">
+      <button onclick="sumaCad(7)" class="bg-slate-100 rounded px-2 py-1">+7 d</button><button onclick="sumaCad(30)" class="bg-slate-100 rounded px-2 py-1">+30 d</button>
+      <button onclick="sumaCad(180)" class="bg-slate-100 rounded px-2 py-1">+6 m</button><button onclick="sumaCad(365)" class="bg-slate-100 rounded px-2 py-1">+1 año</button>
+    </div>
+    <div id="f-info" class="text-xs text-slate-600 space-y-2 mb-3"></div>
+    <div class="flex gap-2">
+      <button id="f-del" onclick="borrarFicha()" class="hidden px-4 py-2.5 rounded-xl bg-red-50 text-red-600 text-sm font-bold">Eliminar</button>
+      <button onclick="guardarFicha()" class="flex-1 bg-emerald-600 text-white py-2.5 rounded-xl font-bold text-sm">Guardar en despensa</button>
+    </div>
+    <p class="text-[10px] text-slate-400 mt-2">Datos de productos: Open Food Facts y proyectos hermanos (licencia ODbL). Pueden estar incompletos o ser incorrectos: revisa la etiqueta, sobre todo los alérgenos.</p>
+  </div>
+</div>
+
+<!-- Modal escáner -->
+<div id="m-scan" class="fixed inset-0 bg-black/80 hidden z-50 items-center justify-center p-4">
+  <div class="bg-white rounded-2xl max-w-md w-full p-4">
+    <div class="flex justify-between mb-2"><h3 class="font-bold text-sm"><i class="fa-solid fa-camera text-emerald-600 mr-1"></i>Escáner de código de barras</h3><button onclick="cerrarScanner()" class="text-slate-400 text-xl"><i class="fa-solid fa-xmark"></i></button></div>
+    <div class="bg-black rounded-xl overflow-hidden relative aspect-video">
+      <video id="video" class="w-full h-full object-cover" autoplay playsinline muted></video>
+      <div class="absolute inset-x-8 top-1/2 -translate-y-1/2 h-16 border-2 border-emerald-400 rounded-lg pointer-events-none"></div>
+    </div>
+    <p id="scan-msg" class="text-xs text-slate-500 my-2">Iniciando cámara…</p>
+    <label class="block text-center bg-slate-100 rounded-lg py-2 text-xs font-bold text-slate-700 mb-2"><i class="fa-solid fa-camera-retro mr-1"></i>Hacer foto al código (si la cámara en vivo falla)
+      <input type="file" accept="image/*" capture="environment" class="hidden" onchange="decodeFoto(this)"></label>
+    <div class="flex gap-2">
+      <input id="scan-manual" inputmode="numeric" placeholder="O escribe el código" class="flex-1 p-2 border rounded-lg text-sm">
+      <button onclick="procesarCodigo(document.getElementById('scan-manual').value.trim())" class="bg-emerald-600 text-white px-4 rounded-lg text-sm font-bold">OK</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const KEY = 'asesor_nutri_v2';
+const CATS = {general:'Despensa', congelados:'Congelados', limpieza:'Limpieza', mascotas:'Mascotas', compra:'🛒 Compra'};
+
+let S = {};
+try { S = JSON.parse(localStorage.getItem(KEY)) || {}; } catch(e) {}
+S.inv = S.inv || []; S.dep = S.dep || []; S.sub = S.sub || 'general'; S.mat = S.mat || ['Mancuernas','Bandas','Esterilla','Peso corporal'];
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e) {} };
+
+/* ---------- Navegación ---------- */
+function tab(t) {
+  document.querySelectorAll('.tab').forEach(e => e.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b => { b.classList.remove('text-emerald-600'); b.classList.add('text-slate-400'); });
+  $('s-' + t).classList.add('active');
+  $('n-' + t).classList.replace('text-slate-400', 'text-emerald-600');
+  if (t === 'chef') selectorChef();
+}
+const abrir = id => { $(id).classList.remove('hidden'); $(id).classList.add('flex'); };
+const cerrar = id => { $(id).classList.add('hidden'); $(id).classList.remove('flex'); };
+
+/* ---------- Despensa ---------- */
+const NSC = {a:'bg-green-600', b:'bg-lime-500', c:'bg-yellow-400', d:'bg-orange-500', e:'bg-red-600'};
+function subtabs() {
+  $('subtabs').innerHTML = Object.entries(CATS).map(([k, v]) =>
+    `<button onclick="S.sub='${k}';save();render()" class="px-3 py-1.5 rounded-lg whitespace-nowrap font-medium ${S.sub === k ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-600'}">${v}</button>`).join('');
+}
+function caducidad(f) {
+  if (!f) return '';
+  const d = Math.ceil((new Date(f) - new Date().setHours(0,0,0,0)) / 864e5);
+  if (d < 0) return `<span class="text-red-600 font-bold">Caducado</span>`;
+  if (d <= 7) return `<span class="text-amber-600 font-bold">Caduca en ${d} d</span>`;
+  return `<span class="text-slate-400">Caduca ${esc(f)}</span>`;
+}
+const okImg = u => typeof u === 'string' && u.startsWith('https://');
+function render() {
+  subtabs();
+  const items = S.sub === 'compra' ? S.inv.filter(i => i.buy) : S.inv.filter(i => i.cat === S.sub);
+  $('lista').innerHTML = items.length ? items.map(i => `
+    <div class="flex items-center gap-3 bg-slate-50 rounded-xl p-3 text-sm">
+      ${okImg(i.img) ? `<img src="${esc(i.img)}" alt="" loading="lazy" class="w-12 h-12 object-contain rounded bg-white">` : `<div class="w-12 h-12 rounded bg-slate-200 flex items-center justify-center text-slate-400"><i class="fa-solid fa-box"></i></div>`}
+      <button onclick="abrirFicha(${i.id})" class="flex-1 text-left min-w-0">
+        <p class="font-medium truncate">${esc(i.n)}${i.ud > 1 ? ` <span class="text-xs text-slate-400">×${i.ud}</span>` : ''}</p>
+        <p class="text-xs text-slate-500 truncate">${esc([i.marca, i.cant].filter(Boolean).join(' · '))}</p>
+        <p class="text-xs">${caducidad(i.cad)}${NSC[i.ns] ? ` <span class="ml-1 text-white px-1.5 rounded uppercase font-bold ${NSC[i.ns]}">${i.ns}</span>` : ''}</p>
+      </button>
+      <div class="flex gap-3 text-lg">
+        <button onclick="toggleBuy(${i.id})" title="Lista de la compra" class="${i.buy ? 'text-emerald-600' : 'text-slate-300'}"><i class="fa-solid fa-cart-shopping"></i></button>
+        <button onclick="borrar(${i.id})" class="text-red-400"><i class="fa-solid fa-trash"></i></button>
+      </div>
+    </div>`).join('') : '<p class="text-xs text-slate-400 text-center py-4">Sin productos aquí todavía.</p>';
+}
+function addProducto(buy) {
+  const n = $('p-nombre').value.trim(); if (!n) return;
+  S.inv.push({ id: Date.now(), n, cat: $('p-cat').value, cad: $('p-cad').value, buy, ud: 1 });
+  $('p-nombre').value = ''; $('p-cad').value = ''; save(); render();
+}
+const toggleBuy = id => { const i = S.inv.find(x => x.id === id); i.buy = !i.buy; save(); render(); };
+const borrar = id => { S.inv = S.inv.filter(x => x.id !== id); save(); render(); };
+function buscarTienda(t) {
+  const l = S.inv.filter(i => i.buy);
+  if (!l.length) return alert('Tu lista de la compra está vacía. Pulsa el carrito en un producto.');
+  const base = t === 'carrefour' ? 'https://www.carrefour.es/?q=' : 'https://www.amazon.es/s?k=';
+  l.slice(0, 5).forEach(i => window.open(base + encodeURIComponent(i.n), '_blank'));
+  if (l.length > 5) alert('Se abrieron los 5 primeros productos para no saturar el navegador.');
+}
+
+/* ---------- Búsqueda de producto por código ---------- */
+const FIELDS = 'code,product_name,product_name_es,generic_name,brands,quantity,categories_tags,ingredients_text,allergens_tags,nutriscore_grade,nova_group,ecoscore_grade,nutriments,image_front_small_url,image_front_url,labels,countries';
+const FUENTES = [['Open Food Facts', 'world.openfoodfacts.org', null], ['Open Beauty Facts', 'world.openbeautyfacts.org', 'limpieza'], ['Open Pet Food Facts', 'world.openpetfoodfacts.org', 'mascotas'], ['Open Products Facts', 'world.openproductsfacts.org', 'limpieza']];
+const ALERG = { milk: 'leche', eggs: 'huevo', gluten: 'gluten', nuts: 'frutos secos', peanuts: 'cacahuetes', soybeans: 'soja', fish: 'pescado', crustaceans: 'crustáceos', molluscs: 'moluscos', celery: 'apio', mustard: 'mostaza', 'sesame-seeds': 'sésamo', 'sulphur-dioxide-and-sulphites': 'sulfitos', lupin: 'altramuces' };
+const grado = g => { g = String(g || '').toLowerCase(); return 'abcde'.includes(g) && g.length === 1 ? g : ''; };
+function parseProd(p, fuente, catFija, code) {
+  const nu = p.nutriments || {}, n = k => (nu[k + '_100g'] != null && nu[k + '_100g'] !== '' ? +nu[k + '_100g'] : null);
+  const tags = p.categories_tags || [];
+  return {
+    code, fuente,
+    n: p.product_name_es || p.product_name || p.generic_name || '',
+    marca: p.brands || '', cant: p.quantity || '',
+    cat: catFija || (tags.some(t => /frozen/.test(t)) ? 'congelados' : 'general'),
+    img: p.image_front_small_url || p.image_front_url || '',
+    ingr: p.ingredients_text || '',
+    alerg: (p.allergens_tags || []).map(a => { const k = a.replace(/^[a-z]{2}:/, ''); return ALERG[k] || k; }).join(', '),
+    ns: grado(p.nutriscore_grade), eco: grado(p.ecoscore_grade), nova: p.nova_group || '',
+    nut: { kcal: n('energy-kcal'), gr: n('fat'), az: n('sugars'), pr: n('proteins'), sal: n('salt') },
+    labels: p.labels || '', paises: p.countries || ''
+  };
+}
+async function fetchT(url) {
+  const c = new AbortController(), t = setTimeout(() => c.abort(), 8000);
+  try { return await fetch(url, { signal: c.signal }); } finally { clearTimeout(t); }
+}
+async function buscarProducto(code) {
+  let fallo = false;
+  for (const [nom, host, cat] of FUENTES) {
+    try {
+      const r = await fetchT(`https://${host}/api/v2/product/${encodeURIComponent(code)}.json?fields=${FIELDS}`);
+      if (!r.ok) { fallo = true; continue; }
+      const j = await r.json();
+      if (j.status === 1 && j.product) return { prod: parseProd(j.product, nom, cat, code) };
+    } catch (e) { fallo = true; }
+  }
+  return { prod: null, fallo };
+}
+
+/* ---------- Ficha de producto ---------- */
+let F = null; // datos del producto en edición (no editables en pantalla + id)
+const fmt = v => v == null ? '—' : (Math.round(v * 10) / 10).toString().replace('.', ',');
+function abrirFicha(id, aviso, datos) {
+  const it = id ? S.inv.find(x => x.id === id) : null;
+  F = it ? { ...it } : { id: null, ud: 1, buy: false, ...datos };
+  $('f-aviso').textContent = aviso || (F.fuente ? 'Datos de ' + F.fuente + ' · revisa y completa la caducidad.' : '');
+  $('f-n').value = F.n || ''; $('f-marca').value = F.marca || ''; $('f-cant').value = F.cant || '';
+  $('f-ud').value = F.ud || 1; $('f-cat').value = F.cat || 'general'; $('f-cad').value = F.cad || '';
+  const im = $('f-img'); if (okImg(F.img)) { im.src = F.img; im.classList.remove('hidden'); } else im.classList.add('hidden');
+  const nt = F.nut || {}, partes = [];
+  const ins = [F.ns && `Nutri-Score ${F.ns.toUpperCase()}`, F.nova && `NOVA ${F.nova}`, F.eco && `Eco-Score ${F.eco.toUpperCase()}`].filter(Boolean);
+  if (ins.length) partes.push(`<p class="font-bold">${esc(ins.join(' · '))}</p>`);
+  if (F.alerg) partes.push(`<p class="bg-amber-50 border border-amber-200 rounded-lg p-2"><b>Alérgenos:</b> ${esc(F.alerg)}</p>`);
+  if (F.nut) partes.push(`<table class="w-full text-center"><tr class="text-slate-400"><td>Kcal</td><td>Grasas</td><td>Azúcares</td><td>Proteínas</td><td>Sal</td></tr><tr class="font-bold text-slate-700"><td>${fmt(nt.kcal)}</td><td>${fmt(nt.gr)}</td><td>${fmt(nt.az)}</td><td>${fmt(nt.pr)}</td><td>${fmt(nt.sal)}</td></tr></table><p class="text-[10px] text-slate-400 text-center">por 100 g/ml (g, salvo kcal)</p>`);
+  if (F.ingr) partes.push(`<details><summary class="font-bold cursor-pointer">Ingredientes</summary><p class="mt-1">${esc(F.ingr)}</p></details>`);
+  if (F.labels) partes.push(`<p><b>Sellos:</b> ${esc(F.labels)}</p>`);
+  if (F.paises) partes.push(`<p><b>Se vende en:</b> ${esc(F.paises)}</p>`);
+  if (F.code) partes.push(`<p class="text-slate-400">Código: ${esc(F.code)}</p>`);
+  $('f-info').innerHTML = partes.join('');
+  $('f-del').classList.toggle('hidden', !it);
+  abrir('m-ficha');
+}
+function sumaCad(d) { const x = new Date(); x.setDate(x.getDate() + d); $('f-cad').value = x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0'); }
+function guardarFicha() {
+  const n = $('f-n').value.trim(); if (!n) return alert('Ponle un nombre al producto.');
+  const o = { ...F, n, marca: $('f-marca').value.trim(), cant: $('f-cant').value.trim(), cat: $('f-cat').value, cad: $('f-cad').value, ud: Math.max(1, +$('f-ud').value || 1) };
+  if (o.id) S.inv = S.inv.map(x => x.id === o.id ? o : x);
+  else { o.id = Date.now(); S.inv.push(o); }
+  S.sub = o.cat; save(); cerrar('m-ficha'); render();
+}
+function borrarFicha() { if (F && F.id && confirm('¿Eliminar este producto?')) { borrar(F.id); cerrar('m-ficha'); } }
+
+/* ---------- Escáner de códigos de barras ---------- */
+const ZX = 'https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js';
+let stream = null, zxing = null, scanning = false;
+const msg = t => { $('scan-msg').textContent = t; };
+async function abrirScanner() {
+  abrir('m-scan'); $('scan-manual').value = ''; msg('Iniciando cámara…'); scanning = true;
+  if (!navigator.mediaDevices || !window.isSecureContext) { msg('La cámara requiere HTTPS. Usa la foto o escribe el código.'); return; }
+  try {
+    if ('BarcodeDetector' in window) {
+      stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } }, audio: false });
+      $('video').srcObject = stream; await $('video').play();
+      const det = new BarcodeDetector({ formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e'] });
+      msg('Apunta al código de barras…');
+      (async function loop() {
+        if (!scanning) return;
+        try { const r = await det.detect($('video')); if (r.length) return procesarCodigo(r[0].rawValue); } catch (e) {}
+        setTimeout(loop, 250);
+      })();
+    } else {
+      await cargarScript(ZX);
+      zxing = new ZXing.BrowserMultiFormatReader();
+      msg('Apunta al código de barras…');
+      zxing.decodeFromConstraints({ video: { facingMode: { ideal: 'environment' } } }, 'video', res => { if (res && scanning) procesarCodigo(res.getText()); });
+    }
+  } catch (e) { msg('No se pudo abrir la cámara (permiso denegado o no disponible). Usa la foto o escribe el código.'); }
+}
+const cargarScript = src => new Promise((ok, ko) => { const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = ko; document.head.appendChild(s); });
+function pararCamara() {
+  scanning = false;
+  if (zxing) { try { zxing.reset(); } catch (e) {} zxing = null; }
+  if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+  $('video').srcObject = null;
+}
+function cerrarScanner() { pararCamara(); cerrar('m-scan'); }
+async function decodeFoto(inp) {
+  const f = inp.files[0]; if (!f) return; msg('Analizando foto…');
+  try {
+    if ('BarcodeDetector' in window) { const r = await new BarcodeDetector().detect(await createImageBitmap(f)); if (r.length) return procesarCodigo(r[0].rawValue); }
+    await cargarScript(ZX);
+    const r = await new ZXing.BrowserMultiFormatReader().decodeFromImageUrl(URL.createObjectURL(f));
+    return procesarCodigo(r.getText());
+  } catch (e) { msg('No se detectó ningún código en la foto. Prueba con más luz o más cerca.'); }
+  inp.value = '';
+}
+async function procesarCodigo(raw) {
+  const code = String(raw || '').replace(/\D/g, '');
+  if (code.length < 8) return msg('Código no válido (mínimo 8 dígitos).');
+  pararCamara(); msg('Código ' + code + ' — buscando producto…');
+  const ya = S.inv.find(i => i.code === code);
+  if (ya) { ya.ud = (ya.ud || 1) + 1; save(); render(); cerrar('m-scan'); return abrirFicha(ya.id, 'Ya estaba en tu despensa: sumada 1 unidad (ajústalo si no era lo que querías).'); }
+  const { prod, fallo } = await buscarProducto(code);
+  cerrar('m-scan');
+  if (prod) abrirFicha(null, '', prod);
+  else abrirFicha(null, fallo ? 'No se pudo consultar la base de datos (¿sin conexión?). Completa los datos a mano.' : 'Producto no encontrado en las bases abiertas. Completa los datos a mano.', { code, n: '', cat: S.sub in CATS && S.sub !== 'compra' ? S.sub : 'general' });
+}
+
+/* ---------- Chef ---------- */
+const RECETAS = [
+  { n: 'Arroz con pollo', k: ['pollo', 'arroz'], p: ['Dora el pollo en una sartén con aceite.', 'Añade el arroz y rehoga 1 min.', 'Cubre con caldo (2 partes por 1 de arroz) y cuece 18 min.', 'Reposa 5 min y sirve.'] },
+  { n: 'Pasta con tomate', k: ['pasta', 'tomate'], p: ['Cuece la pasta según el envase.', 'Calienta el tomate con una pizca de sal.', 'Mezcla y sirve.'] },
+  { n: 'Tortilla de patata', k: ['huevo', 'patata'], p: ['Pocha la patata en rodajas finas en aceite.', 'Mezcla con los huevos batidos.', 'Cuaja 3-4 min por lado.'] },
+  { n: 'Revuelto de huevo y verdura', k: ['huevo', 'verdura', 'espinaca', 'champi'], p: ['Saltea la verdura 3 min.', 'Añade los huevos batidos y remueve a fuego suave.'] },
+  { n: 'Salteado de pollo y verduras', k: ['pollo', 'verdura', 'pimiento', 'cebolla'], p: ['Corta todo en tiras.', 'Saltea el pollo a fuego fuerte.', 'Añade la verdura y cocina 5 min.'] },
+  { n: 'Pizza casera rápida', k: ['pizza', 'queso'], p: ['Precalienta el horno según el envase.', 'Añade queso extra si quieres.', 'Hornea hasta que esté dorada.'] }
+];
+function selectorChef() {
+  const it = S.inv.filter(i => i.cat === 'general' || i.cat === 'congelados');
+  $('chef-sel').innerHTML = it.length ? it.map(i => `<label class="text-xs bg-white border rounded-full px-3 py-1.5"><input type="checkbox" value="${esc(i.n.toLowerCase())}" class="accent-emerald-600 mr-1">${esc(i.n)}</label>`).join('') : '<span class="text-xs text-slate-400">Añade productos a la despensa.</span>';
+}
+function buscarRecetas() {
+  const sel = [...document.querySelectorAll('#chef-sel input:checked')].map(c => c.value);
+  if (sel.length < 2) return ($('chef-res').innerHTML = '<p class="text-xs text-amber-600">Selecciona al menos 2 ingredientes.</p>');
+  const r = RECETAS.map(x => ({ x, c: x.k.filter(k => sel.some(s => s.includes(k))).length })).filter(o => o.c >= 2).sort((a, b) => b.c - a.c);
+  $('chef-res').innerHTML = r.length ? r.map(({ x }) => `<button onclick="verReceta('${esc(x.n)}')" class="w-full text-left bg-emerald-50 border border-emerald-100 rounded-xl p-3 font-medium text-emerald-800">${esc(x.n)}</button>`).join('') : '<p class="text-xs text-slate-500">Ninguna receta de mi base coincide con esa combinación.</p>';
+}
+function verReceta(n) {
+  const r = RECETAS.find(x => x.n === n); $('m-tit').textContent = r.n;
+  $('m-cuerpo').innerHTML = r.p.map((p, i) => `<p><b>${i + 1}.</b> ${esc(p)}</p>`).join(''); abrir('m-receta');
+}
+
+/* ---------- Nutrición ---------- */
+function subNutri(s) {
+  ['adultos', 'bebe'].forEach(x => {
+    $('np-' + x).classList.toggle('hidden', x !== s);
+    $('nb-' + x).className = 'px-4 py-2 rounded-lg text-sm font-medium ' + (x === s ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-600');
+  });
+}
+// Gramos base por persona para ~2000 kcal/día (valores orientativos)
+const COMIDAS = [
+  ['Pollo a la plancha + arroz + ensalada', '150 g pollo, 70 g arroz (crudo), 150 g ensalada'],
+  ['Lentejas con verduras', '80 g lentejas (crudas), 150 g verdura'],
+  ['Pescado al horno + patata', '170 g pescado, 200 g patata, 100 g verdura'],
+  ['Pasta integral con tomate y atún', '80 g pasta (cruda), 80 g atún, 150 g tomate'],
+  ['Tortilla de verduras + ensalada', '2 huevos, 150 g verdura, 150 g ensalada'],
+  ['Ternera salteada con verduras', '130 g ternera, 200 g verdura, 60 g arroz (crudo)'],
+  ['Garbanzos con espinacas', '80 g garbanzos (crudos), 150 g espinacas']
+];
+function escala(txt, f) { return txt.replace(/(\d+) g/g, (_, n) => Math.round(n * f / 5) * 5 + ' g'); }
+function menuAdultos() {
+  const p = +$('n-pers').value || 1, dias = +$('n-dias').value, f = (+$('n-kcal').value || 2000) / 2000;
+  let h = '';
+  for (let d = 0; d < dias; d++) {
+    const c = COMIDAS[d % 7], ce = COMIDAS[(d + 3) % 7];
+    h += `<div class="bg-slate-50 rounded-xl p-3 text-xs"><p class="font-bold text-slate-700 mb-1">Día ${d + 1}</p>
+      <p><b>Comida:</b> ${esc(c[0])}<br><span class="text-slate-500">por persona: ${esc(escala(c[1], f))}</span></p>
+      <p class="mt-1"><b>Cena:</b> ${esc(ce[0])}<br><span class="text-slate-500">por persona: ${esc(escala(ce[1], f * .8))}</span></p></div>`;
+  }
+  $('n-res').innerHTML = `<p class="text-xs text-slate-500">Para ${p} comensal(es). Multiplica las cantidades por persona.</p>` + h;
+}
+function menuBebe() {
+  const m = [['b-des', 'Desayuno', 'Leche/fórmula o pecho + fruta o cereales sin azúcar'],
+             ['b-mer', 'Merienda', 'Fruta troceada o yogur natural'],
+             ['b-cen', 'Cena', 'Verduras con proteína suave (pescado, huevo, pollo) + fruta']];
+  $('b-res').innerHTML = m.filter(x => $(x[0]).checked).map(x => `<div class="bg-slate-50 rounded-xl p-3 text-xs"><b>${x[1]}:</b> ${esc(x[2])}</div>`).join('') || '<p class="text-xs text-slate-400">Sin comidas en casa seleccionadas.</p>';
+}
+
+/* ---------- Training ---------- */
+const MATS = ['Mancuernas', 'Bandas', 'Esterilla', 'Kettlebell', 'Peso corporal'];
+const EJ = [
+  ['Sentadillas', 'Peso corporal'], ['Flexiones', 'Peso corporal'], ['Zancadas', 'Peso corporal'], ['Plancha 30 s', 'Esterilla'],
+  ['Press de hombro', 'Mancuernas'], ['Remo con mancuerna', 'Mancuernas'], ['Curl de bíceps', 'Mancuernas'],
+  ['Remo con banda', 'Bandas'], ['Press pecho con banda', 'Bandas'], ['Swing', 'Kettlebell'], ['Goblet squat', 'Kettlebell'], ['Abdominales', 'Esterilla']
+];
+function pintaMaterial() {
+  $('material').innerHTML = MATS.map(m => `<label><input type="checkbox" ${S.mat.includes(m) ? 'checked' : ''} onchange="toggleMat('${m}',this.checked)" class="accent-emerald-600 mr-1">${m}</label>`).join('');
+}
+function toggleMat(m, on) { S.mat = on ? [...new Set([...S.mat, m])] : S.mat.filter(x => x !== m); save(); }
+function rutina(min) {
+  const ok = EJ.filter(e => S.mat.includes(e[1]) || e[1] === 'Peso corporal'); 
+  const n = Math.min(ok.length, Math.round(min / 4)), series = min >= 30 ? 3 : 2;
+  const sel = ok.slice().sort(() => Math.random() - .5).slice(0, n);
+  $('rutina').innerHTML = `<p class="font-bold mb-2">${min} min · ${series} series × 12 reps (descanso 30-45 s)</p>` + sel.map(e => `<p>• ${esc(e[0])} <span class="text-xs text-emerald-700">(${esc(e[1])})</span></p>`).join('') + '<p class="text-[11px] text-slate-500 mt-2">Calienta 3-5 min antes. Detente si sientes dolor.</p>';
+}
+function addDeporte() {
+  const m = +$('d-min').value; if (!m) return;
+  S.dep.unshift({ t: $('d-tipo').value, m, f: new Date().toLocaleDateString('es-ES') }); S.dep = S.dep.slice(0, 30);
+  $('d-min').value = ''; save(); pintaDep();
+}
+function pintaDep() { $('d-lista').innerHTML = S.dep.map(d => `<p>${esc(d.f)} — ${esc(d.t)}: ${d.m} min</p>`).join(''); }
+
+/* ---------- Service worker (uso sin conexión) ---------- */
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(() => {});
+
+render(); pintaMaterial(); pintaDep(); subNutri('adultos');
+</script>
+</body>
+</html>
