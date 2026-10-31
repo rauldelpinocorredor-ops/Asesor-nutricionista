@@ -31,31 +31,25 @@ input,select,button{font-size:16px} /* evita zoom en iOS */
 <!-- DESPENSA -->
 <section id="s-despensa" class="tab active">
   <div class="bg-white rounded-2xl shadow-sm p-4 mb-4 border">
-    <div class="flex justify-between items-center mb-3">
+    <div class="flex justify-between items-center mb-1">
       <h2 class="font-bold text-slate-700"><i class="fa-solid fa-boxes-stacked text-emerald-600 mr-2"></i>Despensa y hogar</h2>
       <button onclick="abrirScanner()" class="bg-slate-800 text-white px-3 py-2 rounded-lg text-xs font-medium"><i class="fa-solid fa-barcode mr-1"></i>Escanear</button>
     </div>
+    <p id="sync-estado" class="text-[11px] text-slate-400 mb-2"></p>
     <div id="subtabs" class="flex gap-2 overflow-x-auto pb-3 mb-3 border-b text-sm"></div>
-    <div class="bg-slate-50 p-3 rounded-xl mb-4 grid grid-cols-1 sm:grid-cols-4 gap-2">
-      <input id="p-nombre" placeholder="Producto…" class="p-2 border rounded-lg bg-white">
-      <select id="p-cat" class="p-2 border rounded-lg bg-white">
-        <option value="general">Despensa general</option>
-        <option value="congelados">Congelados</option>
-        <option value="limpieza">Limpieza</option>
-        <option value="mascotas">Mascotas</option>
-      </select>
+    <div id="alta" class="bg-slate-50 p-3 rounded-xl mb-4 grid grid-cols-2 gap-2">
+      <input id="p-nombre" placeholder="Producto…" class="col-span-2 p-2 border rounded-lg bg-white">
+      <input id="p-cant" type="number" step="any" min="0" value="1" class="p-2 border rounded-lg bg-white">
+      <select id="p-ud" class="p-2 border rounded-lg bg-white"><option value="ud">unidades</option><option value="rac">raciones</option><option value="kg">kg</option><option value="l">litros</option></select>
+      <select id="p-cat" class="p-2 border rounded-lg bg-white"></select>
       <input type="date" id="p-cad" class="p-2 border rounded-lg bg-white">
-      <button onclick="addProducto(false)" class="bg-emerald-600 text-white p-2 rounded-lg text-sm font-medium">Añadir</button>
+      <button onclick="altaManual()" class="col-span-2 bg-emerald-600 text-white p-2 rounded-lg text-sm font-bold">Añadir al inventario</button>
+    </div>
+    <div id="compra-form" class="hidden mb-3 space-y-2">
+      <div class="flex gap-2"><input id="c-n" placeholder="Producto a comprar…" class="flex-1 p-2 border rounded-lg"><button onclick="addCompra()" class="bg-emerald-600 text-white px-4 rounded-lg font-bold">+</button></div>
+      <div class="grid grid-cols-2 gap-2"><button onclick="compartir()" class="bg-slate-800 text-white py-2 rounded-lg text-xs font-bold"><i class="fa-solid fa-share-nodes mr-1"></i>Compartir / copiar</button><button onclick="waLista()" class="bg-green-600 text-white py-2 rounded-lg text-xs font-bold"><i class="fa-brands fa-whatsapp mr-1"></i>WhatsApp</button></div>
     </div>
     <div id="lista" class="space-y-2"></div>
-  </div>
-  <div class="bg-emerald-50 rounded-2xl p-4 border border-emerald-100">
-    <h3 class="font-bold text-emerald-800 mb-1"><i class="fa-solid fa-tags mr-2"></i>Buscar la lista en tiendas online</h3>
-    <p class="text-xs text-slate-500 mb-3">Abre la búsqueda de cada producto de tu lista en la tienda. Los precios los ves directamente en su web (la app no los inventa).</p>
-    <div class="grid grid-cols-2 gap-3">
-      <button onclick="buscarTienda('carrefour')" class="bg-white border border-emerald-200 rounded-xl py-2 text-sm font-bold text-emerald-700">Carrefour</button>
-      <button onclick="buscarTienda('amazon')" class="bg-white border border-emerald-200 rounded-xl py-2 text-sm font-bold text-indigo-700">Amazon</button>
-    </div>
   </div>
 </section>
 
@@ -73,6 +67,7 @@ input,select,button{font-size:16px} /* evita zoom en iOS */
       <button onclick="abrirIA()" class="bg-indigo-600 text-white py-2.5 rounded-xl font-medium text-sm"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i>Preguntar a una IA</button>
     </div>
     <button onclick="buscarRecetas(true)" class="w-full text-xs text-slate-500 underline mb-3">Ver todas las recetas (mías y de ejemplo)</button>
+    <button onclick="abrir('m-lote')" class="w-full text-xs text-indigo-600 underline mb-3">Añadir muchas recetas con IA (importación en lote)</button>
     <div id="chef-res" class="space-y-2"></div>
   </div>
 </section>
@@ -143,6 +138,27 @@ input,select,button{font-size:16px} /* evita zoom en iOS */
   <button onclick="tab('training')" id="n-training" class="flex flex-col items-center text-slate-400"><i class="fa-solid fa-dumbbell text-lg"></i><span class="text-[10px] font-bold">Training</span></button>
 </nav>
 
+<!-- Login -->
+<div id="m-login" class="fixed inset-0 bg-white z-[70] flex items-center justify-center p-6">
+  <div class="w-full max-w-sm">
+    <h2 class="text-xl font-bold text-emerald-700 mb-4"><i class="fa-solid fa-utensils mr-2"></i>Asesor Nutricionista</h2>
+    <input id="l-e" type="email" placeholder="Correo" autocomplete="username" class="w-full p-3 border rounded-lg mb-2">
+    <input id="l-p" type="password" placeholder="Contraseña" autocomplete="current-password" class="w-full p-3 border rounded-lg mb-2">
+    <button onclick="entrar()" class="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold">Entrar</button>
+    <p id="l-err" class="text-xs text-red-600 mt-2"></p>
+  </div>
+</div>
+
+<!-- Mover / dar de baja -->
+<div id="m-mov" class="fixed inset-0 bg-black/50 hidden z-50 items-end sm:items-center justify-center">
+  <div class="bg-white rounded-t-2xl sm:rounded-2xl max-w-sm w-full p-5">
+    <h3 id="mv-tit" class="font-bold"></h3><p id="mv-inf" class="text-xs text-slate-500 mb-3"></p>
+    <label class="text-xs font-bold">Cantidad<input id="mv-cant" type="number" step="any" class="w-full p-2 border rounded-lg mt-1 mb-2 font-normal"></label>
+    <label class="text-xs font-bold">Destino<select id="mv-dest" class="w-full p-2 border rounded-lg mt-1 mb-3 bg-white font-normal"></select></label>
+    <div class="flex gap-2"><button onclick="cerrar('m-mov')" class="px-4 bg-slate-100 rounded-xl text-sm">Cancelar</button><button onclick="confirmarMov()" class="flex-1 bg-emerald-600 text-white py-2.5 rounded-xl font-bold">Confirmar</button></div>
+  </div>
+</div>
+
 <!-- Temporizadores -->
 <div id="timers" class="fixed left-0 right-0 z-[60] px-3 space-y-1" style="bottom:calc(4.5rem + env(safe-area-inset-bottom))"></div>
 
@@ -167,6 +183,24 @@ input,select,button{font-size:16px} /* evita zoom en iOS */
   </div>
 </div>
 
+<!-- Modal lote -->
+<div id="m-lote" class="fixed inset-0 bg-black/50 hidden z-50 items-end sm:items-center justify-center">
+  <div class="bg-white rounded-t-2xl sm:rounded-2xl max-w-lg w-full p-5 max-h-[92vh] overflow-y-auto text-sm">
+    <div class="flex justify-between mb-2"><h3 class="font-bold">Importar recetas en lote</h3><button onclick="cerrar('m-lote')" class="text-slate-400 text-xl"><i class="fa-solid fa-xmark"></i></button></div>
+    <input id="lt-tema" placeholder="Tema (ej. cenas ligeras, legumbres, para niños…)" class="w-full p-2 border rounded-lg mb-2">
+    <div class="grid grid-cols-3 gap-2 mb-2 text-xs font-bold text-slate-600">
+      <label>Cantidad<input id="lt-n" type="number" value="8" min="3" max="15" class="w-full p-2 border rounded-lg mt-1 font-normal text-sm"></label>
+      <label>Dieta<select id="lt-d" class="w-full p-2 border rounded-lg mt-1 font-normal text-sm bg-white"><option value="">Cualquiera</option><option>mediterránea</option><option>internacional</option><option>vegetariana</option><option>vegana</option><option>sin gluten</option></select></label>
+      <label>Comida<select id="lt-t" class="w-full p-2 border rounded-lg mt-1 font-normal text-sm bg-white"><option value="">Cualquiera</option><option>desayuno</option><option>comida</option><option>cena</option><option>merienda</option><option>postre</option></select></label>
+    </div>
+    <button onclick="copiarLote()" class="w-full bg-slate-800 text-white py-2 rounded-lg font-bold text-xs mb-2">1. Copiar petición</button>
+    <textarea id="lt-resp" rows="4" placeholder="2. Pega aquí la respuesta de la IA" class="w-full p-2 border rounded-lg text-xs mb-2"></textarea>
+    <button onclick="importarLote()" class="w-full bg-emerald-600 text-white py-2 rounded-lg font-bold text-xs">3. Importar recetas</button>
+    <p id="lt-est" class="text-xs text-slate-500 mt-2"></p>
+    <p class="text-[11px] text-slate-400 mt-2">Las etiquetas de dieta y los alérgenos las pone la IA: revisa siempre los ingredientes. Las recetas importadas se sincronizan con el otro móvil.</p>
+  </div>
+</div>
+
 <!-- Modal IA -->
 <div id="m-ia" class="fixed inset-0 bg-black/50 hidden z-50 items-end sm:items-center justify-center">
   <div class="bg-white rounded-t-2xl sm:rounded-2xl max-w-lg w-full p-5 max-h-[92vh] overflow-y-auto text-sm">
@@ -178,16 +212,9 @@ input,select,button{font-size:16px} /* evita zoom en iOS */
       <label class="col-span-2">Notas (opcional)<input id="ia-notas" placeholder="rápido, sin gluten…" class="w-full p-2 border rounded-lg mt-1 font-normal text-sm"></label>
     </div>
     <label class="flex items-center gap-2 text-xs mb-3"><input type="checkbox" id="ia-basic" checked class="accent-indigo-600">Permitir básicos de cocina (aceite, sal, agua, especias)</label>
-    <div class="border rounded-xl p-3 mb-3">
-      <p class="font-bold mb-1">Opción A · Con clave de API de Anthropic</p>
-      <p class="text-[11px] text-slate-500 mb-2">La clave se guarda solo en este navegador (si marcas «recordar») y se envía directamente a Anthropic. Cualquiera con acceso a este móvil/navegador podría leerla: crea una clave exclusiva para esto. El uso de la API se factura aparte de una suscripción a Claude.</p>
-      <input type="password" id="ia-key" placeholder="sk-ant-…" autocomplete="off" class="w-full p-2 border rounded-lg text-sm mb-2">
-      <label class="flex items-center gap-2 text-xs mb-2"><input type="checkbox" id="ia-rec" class="accent-indigo-600">Recordar clave en este dispositivo <span id="ia-tk" class="text-slate-400"></span></label>
-      <div class="flex gap-2"><button onclick="pedirIA()" class="flex-1 bg-indigo-600 text-white py-2 rounded-lg font-bold text-xs">Pedir receta</button><button onclick="borrarKey()" class="px-3 bg-slate-100 rounded-lg text-xs">Borrar clave</button></div>
-    </div>
     <div class="border rounded-xl p-3 mb-2">
-      <p class="font-bold mb-1">Opción B · Sin clave (con tu app de Claude)</p>
-      <p class="text-[11px] text-slate-500 mb-2">Copia la petición, pégala en Claude, y pega aquí su respuesta.</p>
+      <p class="font-bold mb-1">Pide la receta a tu IA favorita</p>
+      <p class="text-[11px] text-slate-500 mb-2">Copia la petición, pégala en Claude, ChatGPT, Gemini u otra IA, y pega aquí su respuesta.</p>
       <button onclick="copiarPrompt()" class="w-full bg-slate-800 text-white py-2 rounded-lg font-bold text-xs mb-2">Copiar petición</button>
       <textarea id="ia-resp" rows="3" placeholder="Pega aquí la respuesta de Claude" class="w-full p-2 border rounded-lg text-xs mb-2"></textarea>
       <button onclick="importarIA()" class="w-full bg-emerald-600 text-white py-2 rounded-lg font-bold text-xs">Importar receta</button>
@@ -661,6 +688,201 @@ function pintaDep() { $('d-lista').innerHTML = S.dep.map(d => `<p>${esc(d.f)} �
 if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(() => {});
 
 render(); pintaMaterial(); pintaDep(); subNutri('adultos');
+</script>
+<script>
+/* ===== v2.0: inventario por movimientos + sincronización ===== */
+const LOCS = { despensa: 'Despensa general', frigo: 'Frigorífico' };
+['i', 'd'].forEach(l => [1, 2, 3].forEach(n => LOCS['cocina-' + l + n] = 'Cong. cocina · Cajón ' + n + (l === 'i' ? ' izquierda' : ' derecha')));
+for (let n = 1; n <= 6; n++) LOCS['sotano-' + n] = 'Cong. sótano · Cajón ' + n;
+LOCS.limpieza = 'Limpieza'; LOCS.mascotas = 'Mascotas';
+const GN = { despensa: 'Despensa', frigo: 'Frigorífico', cocina: 'Cong. cocina', sotano: 'Cong. sótano', limpieza: 'Limpieza', mascotas: 'Mascotas', compra: '🛒 Compra' };
+const GRP = { despensa: ['despensa'], frigo: ['frigo'], cocina: Object.keys(LOCS).filter(k => k.startsWith('cocina')), sotano: Object.keys(LOCS).filter(k => k.startsWith('sotano')), limpieza: ['limpieza'], mascotas: ['mascotas'], compra: [] };
+const MAPC = { general: 'despensa', congelados: 'cocina-i1' };
+const UDN = { ud: 'ud', rac: 'raciones', kg: 'kg', l: 'l' };
+let MOVS = [], COMPRA = [], STOCK = [], VIS = [], USER = null, TAB = 'despensa', MV = null, CACHE = false;
+const optsLoc = ex => Object.entries(LOCS).filter(([k]) => k !== ex).map(([k, v]) => `<option value="${k}">${esc(v)}</option>`).join('');
+const fmtC = s => (Math.round(s.cant * 1000) / 1000) + ' ' + (UDN[s.ud] || s.ud);
+const grupoDe = l => Object.keys(GRP).find(k => GRP[k].includes(l)) || 'despensa';
+
+function calcStock() {
+  const m = {};
+  const e = (x, l) => { const k = x.prod + '|' + l + '|' + (x.cad || ''); return m[k] = m[k] || { prod: x.prod, loc: l, cad: x.cad || '', cant: 0, ud: x.ud, cod: x.cod, fmt: x.fmt, img: x.img, ns: x.ns }; };
+  MOVS.forEach(x => { if (x.de) e(x, x.de).cant -= x.cant; if (x.a) e(x, x.a).cant += x.cant; });
+  STOCK = Object.values(m).filter(s => s.cant > 0.0001);
+}
+const mov = m => fb.addMov({ t: Date.now(), por: USER ? USER.email : '', ...m }).catch(e => alert('No se pudo guardar: ' + e.code));
+
+function render() {
+  $('subtabs').innerHTML = Object.keys(GN).map(k => `<button onclick="TAB='${k}';render()" class="px-3 py-1.5 rounded-lg whitespace-nowrap font-medium ${TAB === k ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-600'}">${GN[k]}</button>`).join('');
+  $('alta').classList.toggle('hidden', TAB === 'compra'); $('compra-form').classList.toggle('hidden', TAB !== 'compra');
+  if (TAB === 'compra') return pintaCompra();
+  VIS = STOCK.filter(s => GRP[TAB].includes(s.loc)).sort((a, b) => a.loc.localeCompare(b.loc) || a.prod.localeCompare(b.prod));
+  let h = (S.inv && S.inv.length) ? `<button onclick="migrar()" class="w-full bg-amber-100 text-amber-800 rounded-xl p-3 text-xs font-bold">Importar ${S.inv.length} productos de la versión anterior (solo en este móvil)</button>` : '', last = '';
+  VIS.forEach((s, i) => {
+    if (GRP[TAB].length > 1 && s.loc !== last) { last = s.loc; h += `<p class="text-xs font-bold text-slate-500 mt-2">${esc(LOCS[s.loc])}</p>`; }
+    h += `<div class="flex items-center gap-3 bg-slate-50 rounded-xl p-3 text-sm">
+      ${okImg(s.img) ? `<img src="${esc(s.img)}" alt="" loading="lazy" class="w-12 h-12 object-contain rounded bg-white">` : `<div class="w-12 h-12 rounded bg-slate-200 flex items-center justify-center text-slate-400"><i class="fa-solid fa-box"></i></div>`}
+      <button onclick="verHist(${i})" class="flex-1 text-left min-w-0"><p class="font-medium truncate">${esc(s.prod)}</p>
+        <p class="text-xs text-slate-500">${fmtC(s)}${s.fmt ? ' · ' + esc(s.fmt) : ''}</p>
+        <p class="text-xs">${caducidad(s.cad)}${NSC[s.ns] ? ` <span class="ml-1 text-white px-1.5 rounded uppercase font-bold ${NSC[s.ns]}">${s.ns}</span>` : ''}</p></button>
+      <div class="flex gap-4 text-lg"><button onclick="abrirMov(${i})" title="Mover" class="text-emerald-600"><i class="fa-solid fa-right-left"></i></button><button onclick="abrirMov(${i},'baja')" title="Consumido" class="text-slate-500"><i class="fa-solid fa-utensils"></i></button></div></div>`;
+  });
+  $('lista').innerHTML = h || '<p class="text-xs text-slate-400 text-center py-4">Sin productos aquí todavía.</p>';
+}
+function altaManual() {
+  const n = $('p-nombre').value.trim(), q = +$('p-cant').value;
+  if (!n || !(q > 0)) return alert('Pon nombre y cantidad.');
+  mov({ prod: n, cod: '', cant: q, ud: $('p-ud').value, cad: $('p-cad').value, fmt: '', img: '', ns: '', de: '', a: $('p-cat').value, tipo: 'alta', nota: '' });
+  $('p-nombre').value = ''; $('p-cad').value = ''; TAB = grupoDe($('p-cat').value); render();
+}
+function abrirMov(i, modo) {
+  MV = VIS[i]; $('mv-tit').textContent = MV.prod; $('mv-inf').textContent = 'Hay ' + fmtC(MV) + ' en ' + LOCS[MV.loc]; $('mv-cant').value = MV.cant;
+  $('mv-dest').innerHTML = '<option value="@consumido">✅ Consumido (baja)</option><option value="@tirado">🗑️ Tirado (baja)</option>' + optsLoc(MV.loc);
+  $('mv-dest').value = modo === 'baja' ? '@consumido' : (MV.loc === 'frigo' ? 'despensa' : 'frigo'); abrir('m-mov');
+}
+function confirmarMov() {
+  const q = +$('mv-cant').value;
+  if (!(q > 0) || q > MV.cant + 0.0001) return alert('Cantidad no válida (máximo ' + MV.cant + ').');
+  const d = $('mv-dest').value, b = { prod: MV.prod, cod: MV.cod || '', cant: q, ud: MV.ud, cad: MV.cad || '', fmt: MV.fmt || '', img: MV.img || '', ns: MV.ns || '', de: MV.loc };
+  d[0] === '@' ? mov({ ...b, a: '', tipo: 'baja', nota: d.slice(1) }) : mov({ ...b, a: d, tipo: 'mov', nota: '' });
+  cerrar('m-mov');
+}
+const txtMov = x => ({ alta: 'Alta en ' + (LOCS[x.a] || x.a), mov: 'Movido de ' + (LOCS[x.de] || x.de) + ' a ' + (LOCS[x.a] || x.a), baja: (x.nota === 'tirado' ? 'Tirado' : 'Consumido') + ' desde ' + (LOCS[x.de] || x.de), anula: 'Anulación' }[x.tipo] || x.tipo) + ' (' + fmtC(x) + ')';
+function verHist(i) {
+  const s = VIS[i], an = new Set(MOVS.filter(x => x.tipo === 'anula').map(x => x.ref));
+  $('m-tit').textContent = 'Historial · ' + s.prod;
+  $('m-cuerpo').innerHTML = MOVS.filter(x => x.prod === s.prod).reverse().map(x => `<div class="flex justify-between items-center bg-slate-50 rounded-lg p-2 text-xs"><span>${new Date(x.t).toLocaleDateString('es-ES')} · ${esc(txtMov(x))}${an.has(x.id) ? ' <i>(anulado)</i>' : ''}</span>${x.tipo !== 'anula' && !an.has(x.id) ? `<button onclick="deshacer('${x.id}')" class="text-red-500 font-bold ml-2">Deshacer</button>` : ''}</div>`).join('') || 'Sin movimientos.';
+  $('m-acc').innerHTML = ''; abrir('m-receta');
+}
+function deshacer(id) {
+  const x = MOVS.find(m => m.id === id); if (!x || !confirm('¿Anular este movimiento?')) return;
+  mov({ prod: x.prod, cod: x.cod || '', cant: x.cant, ud: x.ud, cad: x.cad || '', fmt: x.fmt || '', img: x.img || '', ns: x.ns || '', de: x.a || '', a: x.de || '', tipo: 'anula', ref: id, nota: '' });
+  cerrar('m-receta');
+}
+
+/* Lista de la compra (sincronizada) */
+function pintaCompra() {
+  $('lista').innerHTML = COMPRA.map(c => `<div class="flex items-center gap-3 bg-slate-50 rounded-xl p-3 text-sm"><input type="checkbox" ${c.hecho ? 'checked' : ''} onchange="fb.setCompra('${c.id}',{hecho:this.checked})" class="w-5 h-5 accent-emerald-600"><span class="flex-1 ${c.hecho ? 'line-through text-slate-400' : ''}">${esc(c.n)}</span><button onclick="fb.delCompra('${c.id}')" class="text-red-400"><i class="fa-solid fa-trash"></i></button></div>`).join('') || '<p class="text-xs text-slate-400 text-center py-4">Lista vacía.</p>';
+}
+function addCompra() { const n = $('c-n').value.trim(); if (!n) return; fb.addCompra({ n, hecho: false, t: Date.now() }); $('c-n').value = ''; }
+const textoLista = () => '🛒 Lista de la compra\n' + COMPRA.filter(c => !c.hecho).map(c => '• ' + c.n).join('\n');
+async function compartir() {
+  const t = textoLista();
+  if (navigator.share) { try { await navigator.share({ text: t }); return; } catch (e) {} }
+  try { await navigator.clipboard.writeText(t); alert('Lista copiada. Pégala donde quieras.'); } catch (e) { alert(t); }
+}
+const waLista = () => window.open('https://wa.me/?text=' + encodeURIComponent(textoLista()), '_blank');
+
+/* Migración desde la versión 1 (datos locales de este móvil) */
+function migrar() {
+  S.inv.forEach(i => {
+    mov({ prod: i.n, cod: i.code || '', cant: i.ud || 1, ud: 'ud', cad: i.cad || '', fmt: i.cant || '', img: i.img || '', ns: i.ns || '', de: '', a: MAPC[i.cat] || i.cat || 'despensa', tipo: 'alta', nota: 'migrado v1' });
+    if (i.buy) fb.addCompra({ n: i.n, hecho: false, t: Date.now() });
+  });
+  S.inv = []; save(); render();
+}
+
+/* Escáner y ficha: ahora generan altas en el inventario */
+const _pp = parseProd; parseProd = function () { const r = _pp.apply(null, arguments); r.cat = MAPC[r.cat] || r.cat; return r; };
+const _af = abrirFicha; abrirFicha = function (id, av, d) { if (d && d.cat) d.cat = MAPC[d.cat] || d.cat; _af(id, av, d); };
+function guardarFicha() {
+  const n = $('f-n').value.trim(); if (!n) return alert('Ponle un nombre al producto.');
+  const loc = $('f-cat').value || 'despensa';
+  mov({ prod: n, cod: (F && F.code) || '', cant: Math.max(1, +$('f-ud').value || 1), ud: 'ud', cad: $('f-cad').value, fmt: $('f-cant').value.trim(), img: okImg(F && F.img) ? F.img : '', ns: (F && F.ns) || '', de: '', a: loc, tipo: 'alta', nota: $('f-marca').value.trim() });
+  cerrar('m-ficha'); TAB = grupoDe(loc); render();
+}
+function selectorChef() {
+  const n = [...new Set(STOCK.filter(s => !['limpieza', 'mascotas'].includes(s.loc)).map(s => s.prod))];
+  $('chef-sel').innerHTML = n.length ? n.map(x => `<label class="text-xs bg-white border rounded-full px-3 py-1.5"><input type="checkbox" value="${esc(x)}" class="accent-emerald-600 mr-1">${esc(x)}</label>`).join('') : '<span class="text-xs text-slate-400">Añade productos al inventario.</span>';
+}
+
+/* Sesión y estado */
+function estado() {
+  $('sync-estado').innerHTML = USER ? esc(USER.email) + ' · ' + (!navigator.onLine ? 'sin red (se enviará al volver)' : CACHE ? 'sincronizando…' : 'sincronizado') + ' · <button onclick="fb.logout()" class="underline">salir</button>' : 'Sin sesión';
+}
+window.onUser = u => { USER = u; $('m-login').classList.toggle('hidden', !!u); $('m-login').classList.toggle('flex', !u); estado(); };
+window.onMovs = (l, c) => { MOVS = l; CACHE = c; calcStock(); render(); estado(); };
+window.onCompra = l => { COMPRA = l.sort((a, b) => (a.hecho - b.hecho) || (a.t - b.t)); render(); };
+addEventListener('online', estado); addEventListener('offline', estado);
+async function entrar() { try { await fb.login($('l-e').value.trim(), $('l-p').value); $('l-p').value = ''; $('l-err').textContent = ''; } catch (e) { $('l-err').textContent = 'No se pudo entrar: ' + (e.code || e.message); } }
+$('p-cat').innerHTML = optsLoc(); $('f-cat').innerHTML = optsLoc(); render();
+</script>
+<script>
+/* ===== v2.1: más recetas, recetas sincronizadas e importación en lote ===== */
+try { localStorage.removeItem('asesor_nutri_ia_key'); } catch (e) {}
+const EXTRA = [["Gazpacho andaluz", "tomate,pepino,pimiento,ajo,pan", ["Tritura tomates maduros, pepino, pimiento, ajo y pan remojado.", "Añade aceite, vinagre y sal y vuelve a triturar.", "Enfría en la nevera 120 min y sirve frío."]], ["Salmorejo", "tomate,pan,ajo,huevo,jamon", ["Tritura tomate, pan, ajo, aceite y sal hasta lograr una crema fina.", "Enfría 120 min.", "Cuece los huevos 10 min y sirve con huevo picado y jamón."]], ["Ensalada mixta", "lechuga,tomate,cebolla,atun,huevo,maiz", ["Cuece los huevos 10 min.", "Lava y trocea las verduras.", "Mezcla con atún y huevo y aliña con aceite, vinagre y sal."]], ["Pisto con huevo", "calabac,pimiento,tomate,cebolla,huevo", ["Pocha cebolla y pimiento 10 min.", "Añade el calabacín 8 min y el tomate 15 min.", "Casca los huevos encima y cuaja 4 min."]], ["Lentejas con arroz", "lenteja,arroz,cebolla,ajo", ["Sofríe cebolla y ajo 5 min.", "Añade las lentejas y cubre con agua; cuece 25 min.", "Incorpora el arroz y cuece 15 min más."]], ["Alubias estofadas con chorizo", "alubia,chorizo,cebolla,zanahoria,patata", ["Sofríe cebolla y zanahoria 5 min.", "Añade alubias cocidas, chorizo y patata en dados y cubre con caldo.", "Cuece 25 min a fuego suave."]], ["Cocido de garbanzos", "garbanzo,zanahoria,patata,pollo,repollo", ["Cuece garbanzos con pollo y zanahoria 60 min (25 min en olla exprés).", "Añade patata y repollo y cuece 20 min.", "Sirve el caldo con fideos y el resto aparte."]], ["Bacalao con tomate", "bacalao,tomate,cebolla,pimiento", ["Desala el bacalao según el envase.", "Sofríe cebolla y pimiento 8 min y añade el tomate 10 min.", "Incorpora el bacalao y cuece 8 min."]], ["Dorada al horno", "dorada,patata,cebolla,limon", ["Precalienta el horno a 200 °C.", "Hornea patata y cebolla en rodajas 20 min.", "Coloca la dorada limpia encima con limón y hornea 20 min."]], ["Pollo al ajillo", "pollo,ajo,vino,perejil", ["Dora el pollo salpimentado 10 min.", "Añade ajos laminados y un chorro de vino blanco.", "Cuece tapado 20 min y termina con perejil."]], ["Ternera estofada", "ternera,patata,zanahoria,cebolla,vino", ["Sella la carne 6 min.", "Sofríe cebolla y zanahoria 5 min y cubre con caldo y vino.", "Cuece 60 min, añade la patata y cuece 20 min más."]], ["Lomo en salsa de cebolla", "lomo,cebolla,vino", ["Dora los filetes de lomo 3 min por lado y resérvalos.", "Pocha la cebolla 15 min con un chorro de vino.", "Devuelve el lomo a la salsa y cuece 5 min."]], ["Tortilla de espinacas", "huevo,espinaca,queso", ["Saltea las espinacas 3 min.", "Mezcla con los huevos batidos y el queso.", "Cuaja 3 min por cada lado."]], ["Berenjenas gratinadas", "berenjena,tomate,queso", ["Hornea la berenjena en rodajas a 200 °C 20 min.", "Cubre con tomate y queso.", "Gratina 8 min."]], ["Pimientos rellenos de carne", "pimiento,carne,arroz,tomate", ["Sofríe la carne picada con el tomate 6 min.", "Rellena los pimientos.", "Hornea a 180 °C 35 min."]], ["Espaguetis con gambas y ajo", "pasta,espagueti,gamba,ajo", ["Cuece los espaguetis 10 min.", "Saltea ajo y gambas 3 min.", "Mezcla con un poco del agua de cocción."]], ["Lasaña de verduras", "pasta,lasana,calabac,berenjena,tomate,queso", ["Saltea la verdura troceada 8 min.", "Monta capas de pasta, verdura, tomate y queso.", "Hornea a 190 °C 35 min."]], ["Risotto de champiñones", "arroz,champi,cebolla,queso,caldo", ["Sofríe la cebolla 5 min y añade los champiñones 5 min.", "Añade el arroz y rehoga 1 min.", "Incorpora caldo caliente poco a poco 18 min y termina con queso."]], ["Paella mixta sencilla", "arroz,pollo,pimiento,judia,tomate", ["Dora el pollo 8 min.", "Añade verdura y tomate 5 min.", "Añade el arroz y caldo (2 partes por 1), cuece 18 min y reposa 5 min."]], ["Cuscús con pollo y verduras", "cuscus,pollo,calabac,zanahoria", ["Saltea pollo y verdura 10 min.", "Hidrata el cuscús con caldo caliente 5 min.", "Mezcla todo y sirve."]], ["Falafel al horno", "garbanzo,cebolla,ajo,perejil", ["Tritura garbanzos cocidos con cebolla, ajo y especias.", "Forma bolas y colócalas en una bandeja.", "Hornea a 200 °C 20 min."]], ["Hummus", "garbanzo,limon,ajo,tahini", ["Tritura garbanzos cocidos con limón, ajo, tahini y aceite.", "Ajusta la textura con agua y sirve con verduras crudas."]], ["Tortitas de avena y plátano", "avena,platano,huevo", ["Tritura avena, plátano y huevo.", "Cocina cucharadas en sartén 2 min por lado."]], ["Yogur con fruta y avena", "yogur,fruta,avena,nueces", ["Mezcla el yogur con fruta troceada y avena.", "Corona con frutos secos."]], ["Tostadas con tomate y jamón", "pan,tomate,jamon", ["Tuesta el pan 2 min.", "Unta tomate rallado con aceite y añade el jamón."]], ["Compota de manzana", "manzana,canela", ["Pela y trocea las manzanas.", "Cuece con un poco de agua y canela 15 min.", "Tritura si prefieres textura fina."]], ["Arroz con leche", "arroz,leche,canela,limon", ["Cuece el arroz en agua 10 min.", "Añade leche caliente y cuece 30 min removiendo.", "Endulza y termina con canela."]], ["Bizcocho de yogur", "yogur,huevo,harina,azucar,aceite", ["Mezcla yogur, huevos, azúcar y aceite.", "Añade harina con levadura.", "Hornea a 180 °C 40 min."]], ["Sopa de verduras con fideos", "zanahoria,puerro,calabac,patata,fideo", ["Cuece las verduras troceadas en agua 20 min.", "Añade los fideos y cuece 5 min."]], ["Sopa de ajo", "pan,ajo,huevo,pimenton", ["Dora los ajos laminados 1 min.", "Añade pimentón y pan y cubre con caldo; cuece 10 min.", "Casca los huevos y cuaja 3 min."]], ["Merluza en salsa verde", "merluza,ajo,perejil,guisante", ["Sofríe ajo 1 min y añade harina y caldo de pescado; cuece 5 min.", "Añade la merluza y los guisantes y cuece 6 min con perejil."]], ["Alitas de pollo al horno", "pollo,ajo,limon", ["Marina las alitas con ajo, limón y especias 30 min.", "Hornea a 200 °C 40 min dándoles la vuelta a mitad."]], ["Brochetas de pollo y verduras", "pollo,pimiento,cebolla,calabac", ["Ensarta pollo y verdura troceados.", "Cocina a la plancha 12 min dándoles la vuelta."]]];
+EXTRA.forEach(([n, k, p]) => RECETAS.push({ id: 'b' + RECETAS.length, n, k: k.split(','), p: p.map(t => ({ t, m: minDe(t) })) }));
+const recData = r => ({ n: r.n, i: r.i || [], p: r.p.map(x => ({ t: x.t, m: x.m == null ? null : x.m })), tipo: r.tipo || '', dietas: r.dietas || [], rac: r.rac || '' });
+let LOCALREC = (S.rec || []).slice(), RECMIG = !!S.recMig;
+window.onRecetas = l => {
+  if (!RECMIG) LOCALREC.forEach(r => { if (!l.some(x => x.id === r.id)) fb.setReceta(r.id, recData(r)); });
+  RECMIG = true; S.recMig = true; LOCALREC = []; S.rec = l; save();
+};
+function guardarForm() {
+  const n = $('rf-n').value.trim(), i = lineas($('rf-i').value), p = lineas($('rf-p').value);
+  if (!n || !p.length) return alert('Pon un nombre y al menos un paso.');
+  const r = { id: editId || 'c' + Date.now(), n, i, p: p.map(t => ({ t, m: minDe(t) })) };
+  fb.setReceta(r.id, recData(r)); S.rec = editId ? S.rec.map(x => x.id === editId ? r : x) : [...S.rec, r];
+  cerrar('m-form'); verReceta(r.id);
+}
+function borrarReceta(id) { if (confirm('¿Eliminar esta receta?')) { fb.delReceta(id); S.rec = S.rec.filter(x => x.id !== id); cerrar('m-receta'); $('chef-res').innerHTML = ''; } }
+function guardarIA() { const r = { ...RIA, id: 'c' + Date.now() }; fb.setReceta(r.id, recData(r)); S.rec = [...S.rec, r]; verReceta(r.id); }
+
+function promptLote() {
+  const d = $('lt-d').value, t = $('lt-t').value, tema = $('lt-tema').value.trim() || 'cocina casera variada';
+  return `Eres un chef y dietista. Dame ${+$('lt-n').value || 8} recetas caseras distintas sobre: ${tema}.${d ? ' Todas deben ser de dieta ' + d + '.' : ''}${t ? ' Tipo de comida: ' + t + '.' : ''} Raciones: 2. ` +
+    `Responde SOLO con un array JSON válido, sin texto adicional ni bloques de código, con objetos de este formato exacto: {"nombre":"...","tipo":"desayuno|comida|cena|merienda|postre","dietas":["mediterránea","vegetariana"],"raciones":2,"ingredientes":["200 g de arroz"],"pasos":[{"texto":"...","minutos":10}]}. ` +
+    `Reglas: pasos cortos y claros; "minutos" entero en los pasos de cocción o espera y null si no hay tiempo; ingredientes con cantidades; no repitas recetas; indica alérgenos comunes en el último paso; pon una dieta en "dietas" solo si la receta la cumple de verdad.`;
+}
+async function copiarLote() {
+  try { await navigator.clipboard.writeText(promptLote()); $('lt-est').textContent = 'Petición copiada. Pégala en tu IA y trae aquí la respuesta.'; }
+  catch (e) { $('lt-resp').value = promptLote(); $('lt-est').textContent = 'No pude copiar: la petición está en el cuadro de abajo; cópiala a mano y borra el cuadro antes de pegar la respuesta.'; }
+}
+function importarLote() {
+  try {
+    const t = $('lt-resp').value, a = t.indexOf('['), b = t.lastIndexOf(']');
+    if (a < 0 || b <= a) throw new Error('no encuentro un array JSON.');
+    const arr = JSON.parse(t.slice(a, b + 1)), nombres = new Set(todas().map(r => sinAc(r.n)));
+    let ok = 0, dup = 0, mal = 0;
+    arr.slice(0, 25).forEach(x => {
+      try {
+        const r = parseReceta(JSON.stringify(x));
+        if (nombres.has(sinAc(r.n))) { dup++; return; }
+        r.tipo = String(x.tipo || '').slice(0, 20); r.dietas = Array.isArray(x.dietas) ? x.dietas.slice(0, 6).map(v => String(v).slice(0, 20)) : [];
+        r.id = 'c' + Date.now() + ok; fb.setReceta(r.id, recData(r)); S.rec.push(r); nombres.add(sinAc(r.n)); ok++;
+      } catch (e) { mal++; }
+    });
+    $('lt-est').textContent = `Importadas ${ok} · repetidas ${dup} · con error ${mal}`;
+  } catch (e) { $('lt-est').textContent = 'No se pudo importar: ' + e.message; }
+}
+</script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { initializeFirestore, persistentLocalCache, persistentSingleTabManager, collection, addDoc, setDoc, doc, updateDoc, deleteDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+const app = initializeApp({
+  apiKey: "AIzaSyD5bRjagMvmXgxLEI8Pjnl-RSYgfhZvfCE", authDomain: "asesor-nutricionista.firebaseapp.com", projectId: "asesor-nutricionista",
+  storageBucket: "asesor-nutricionista.firebasestorage.app", messagingSenderId: "773072878607", appId: "1:773072878607:web:bb12e84a4be5ae10c8b77a"
+});
+const auth = getAuth(app); let db;
+try { db = initializeFirestore(app, { localCache: persistentLocalCache({ tabManager: persistentSingleTabManager() }) }); } catch (e) { db = initializeFirestore(app, {}); }
+window.fb = {
+  login: (e, p) => signInWithEmailAndPassword(auth, e, p), logout: () => signOut(auth),
+  addMov: m => addDoc(collection(db, 'mov'), m),
+  addCompra: c => addDoc(collection(db, 'compra'), c),
+  setCompra: (id, d) => updateDoc(doc(db, 'compra', id), d),
+  delCompra: id => deleteDoc(doc(db, 'compra', id)),
+  setReceta: (id, d) => setDoc(doc(db, 'recetas', id), d),
+  delReceta: id => deleteDoc(doc(db, 'recetas', id))
+};
+let u1, u2, u3;
+onAuthStateChanged(auth, u => {
+  window.onUser(u); if (u1) u1(); if (u2) u2(); if (u3) u3(); u1 = u2 = u3 = null;
+  if (!u) { window.onMovs([], false); window.onCompra([]); return; }
+  u1 = onSnapshot(query(collection(db, 'mov'), orderBy('t')), { includeMetadataChanges: true }, sn => window.onMovs(sn.docs.map(d => ({ id: d.id, ...d.data() })), sn.metadata.fromCache), e => console.error(e));
+  u2 = onSnapshot(collection(db, 'compra'), sn => window.onCompra(sn.docs.map(d => ({ id: d.id, ...d.data() }))), e => console.error(e));
+  u3 = onSnapshot(collection(db, 'recetas'), sn => window.onRecetas(sn.docs.map(d => ({ id: d.id, ...d.data() }))), e => console.error(e));
+});
 </script>
 </body>
 </html>
