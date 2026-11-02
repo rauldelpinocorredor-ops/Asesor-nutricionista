@@ -33,9 +33,10 @@ input,select,button{font-size:16px} /* evita zoom en iOS */
   <div class="bg-white rounded-2xl shadow-sm p-4 mb-4 border">
     <div class="flex justify-between items-center mb-1">
       <h2 class="font-bold text-slate-700"><i class="fa-solid fa-boxes-stacked text-emerald-600 mr-2"></i>Despensa y hogar</h2>
-      <div class="flex gap-2"><button onclick="abrir('m-tk')" class="bg-indigo-600 text-white px-3 py-2 rounded-lg text-xs font-medium"><i class="fa-solid fa-receipt mr-1"></i>Ticket</button><button onclick="abrirScanner()" class="bg-slate-800 text-white px-3 py-2 rounded-lg text-xs font-medium"><i class="fa-solid fa-barcode mr-1"></i>Escanear</button></div>
+      <div class="flex gap-2"><button onclick="abrirBus()" class="bg-sky-600 text-white px-3 py-2 rounded-lg text-xs font-medium"><i class="fa-solid fa-magnifying-glass mr-1"></i>Buscar</button><button onclick="abrir('m-tk')" class="bg-indigo-600 text-white px-3 py-2 rounded-lg text-xs font-medium"><i class="fa-solid fa-receipt mr-1"></i>Ticket</button><button onclick="abrirScanner()" class="bg-slate-800 text-white px-3 py-2 rounded-lg text-xs font-medium"><i class="fa-solid fa-barcode mr-1"></i>Escanear</button></div>
     </div>
     <p id="sync-estado" class="text-[11px] text-slate-400 mb-2"></p>
+    <div id="avisos" class="mb-3"></div>
     <div id="subtabs" class="flex gap-2 overflow-x-auto pb-3 mb-3 border-b text-sm"></div>
     <div id="alta" class="bg-slate-50 p-3 rounded-xl mb-4 grid grid-cols-2 gap-2">
       <input id="p-nombre" placeholder="Producto…" class="col-span-2 p-2 border rounded-lg bg-white">
@@ -47,6 +48,7 @@ input,select,button{font-size:16px} /* evita zoom en iOS */
     </div>
     <div id="compra-form" class="hidden mb-3 space-y-2">
       <div class="flex gap-2"><input id="c-n" placeholder="Producto a comprar…" class="flex-1 p-2 border rounded-lg"><button onclick="addCompra()" class="bg-emerald-600 text-white px-4 rounded-lg font-bold">+</button></div>
+      <button onclick="compraSel()" class="w-full bg-emerald-600 text-white py-2 rounded-lg text-xs font-bold"><i class="fa-solid fa-basket-shopping mr-1"></i>Pasar lo marcado como comprado al inventario</button>
       <div class="grid grid-cols-2 gap-2"><button onclick="compartir()" class="bg-slate-800 text-white py-2 rounded-lg text-xs font-bold"><i class="fa-solid fa-share-nodes mr-1"></i>Compartir / copiar</button><button onclick="waLista()" class="bg-green-600 text-white py-2 rounded-lg text-xs font-bold"><i class="fa-brands fa-whatsapp mr-1"></i>WhatsApp</button></div>
     </div>
     <div id="lista" class="space-y-2"></div>
@@ -61,6 +63,7 @@ input,select,button{font-size:16px} /* evita zoom en iOS */
       <button onclick="formReceta()" class="text-xs bg-slate-800 text-white px-3 py-2 rounded-lg font-medium">+ Mi receta</button>
     </div>
     <p class="text-xs text-slate-500 mb-3">Elige ingredientes de tu despensa (2 o más para buscar en mis recetas; 1 o más para preguntar a una IA):</p>
+    <input id="ch-q" oninput="buscaReceta()" placeholder="Buscar receta por nombre…" class="w-full p-2 border rounded-lg text-sm mb-3">
     <div id="chef-sel" class="flex flex-wrap gap-2 mb-4 p-3 bg-slate-50 rounded-xl min-h-[50px]"></div>
     <div class="grid grid-cols-2 gap-2 mb-2">
       <button onclick="buscarRecetas()" class="bg-emerald-600 text-white py-2.5 rounded-xl font-medium text-sm">Buscar recetas</button>
@@ -91,6 +94,17 @@ input,select,button{font-size:16px} /* evita zoom en iOS */
       <p class="text-[11px] text-slate-400 mt-3">Orientativo, no sustituye a un dietista-nutricionista. Cantidades en crudo por persona, escaladas de forma aproximada según las kcal indicadas.</p>
     </div>
     <div id="np-bebe" class="hidden">
+      <div class="bg-sky-50 border border-sky-200 rounded-xl p-3 mb-4">
+        <p class="font-bold text-sky-800 text-sm mb-1"><i class="fa-solid fa-school mr-1"></i>Menú del cole</p>
+        <label class="block text-center bg-sky-600 text-white rounded-lg py-2 font-bold text-xs mb-2"><i class="fa-solid fa-file-pdf mr-1"></i>Subir PDF del mes<input type="file" accept="application/pdf" class="hidden" onchange="colePDF(this)"></label>
+        <p id="co-est" class="text-[11px] text-slate-500 mb-2"></p>
+        <div id="co-prev"></div>
+        <details class="mb-2"><summary class="text-xs underline text-slate-600 cursor-pointer">Añadir un día a mano</summary>
+          <input type="date" id="co-f" class="w-full p-2 border rounded-lg mt-2 text-sm"><textarea id="co-t" rows="4" placeholder="Un plato por línea" class="w-full p-2 border rounded-lg mt-1 text-sm"></textarea>
+          <button onclick="coleManual()" class="w-full bg-slate-700 text-white py-2 rounded-lg text-xs font-bold mt-1">Guardar día</button></details>
+        <div id="co-lista"></div>
+        <p class="text-[10px] text-slate-400">La cena sugerida sigue las pautas que trae el propio PDF del cole (método del espejo).</p>
+      </div>
       <p class="text-xs text-slate-500 mb-3">Marca qué comidas hace el bebé en casa (la comida del cole se supone cubierta por la escuela):</p>
       <div class="space-y-3 bg-slate-50 p-4 rounded-xl text-sm">
         <label class="flex justify-between">Desayuno en casa<input type="checkbox" id="b-des" checked class="accent-emerald-600 w-5 h-5"></label>
@@ -182,6 +196,35 @@ input,select,button{font-size:16px} /* evita zoom en iOS */
     <button onclick="guardarForm()" class="w-full bg-emerald-600 text-white py-2.5 rounded-xl font-bold text-sm">Guardar receta</button>
   </div>
 </div>
+
+<!-- Modal planificar descongelación -->
+<div id="m-plan" class="fixed inset-0 bg-black/50 hidden z-50 items-end sm:items-center justify-center">
+  <div class="bg-white rounded-t-2xl sm:rounded-2xl max-w-sm w-full p-5">
+    <h3 id="pl-tit" class="font-bold"></h3><p id="pl-inf" class="text-xs text-slate-500 mb-3"></p>
+    <label class="text-xs font-bold">¿Qué día lo vas a comer?<input type="date" id="pl-fecha" class="w-full p-2 border rounded-lg mt-1 mb-2 font-normal"></label>
+    <label class="text-xs font-bold">Cantidad<input type="number" id="pl-cant" step="any" class="w-full p-2 border rounded-lg mt-1 mb-3 font-normal"></label>
+    <p class="text-[11px] text-slate-400 mb-3">La app te avisará la víspera (al abrirla) para pasarlo al frigorífico.</p>
+    <div class="flex gap-2"><button onclick="cerrar('m-plan')" class="px-4 bg-slate-100 rounded-xl text-sm">Cancelar</button><button onclick="guardarPlan()" class="flex-1 bg-sky-600 text-white py-2.5 rounded-xl font-bold">Planificar</button></div>
+  </div>
+</div>
+
+<!-- Modal buscar alimento -->
+<div id="m-bus" class="fixed inset-0 bg-black/50 hidden z-50 items-end sm:items-center justify-center"><div class="bg-white rounded-t-2xl sm:rounded-2xl max-w-md w-full p-4 max-h-[85vh] overflow-y-auto">
+  <div class="flex justify-between mb-2"><h3 class="font-bold">Buscar alimento</h3><button onclick="cerrar('m-bus')" class="text-slate-400 text-xl"><i class="fa-solid fa-xmark"></i></button></div>
+  <input id="bus-q" oninput="busca()" placeholder="Nombre del alimento…" class="w-full p-2 border rounded-lg mb-3"><div id="bus-res" class="space-y-2"></div></div></div>
+
+<!-- Modal compra seleccionada -->
+<div id="m-cs" class="fixed inset-0 bg-black/50 hidden z-50 items-end sm:items-center justify-center"><div class="bg-white rounded-t-2xl sm:rounded-2xl max-w-sm w-full p-5">
+  <p id="cs-pos" class="text-[11px] text-slate-400"></p><h3 id="cs-tit" class="font-bold mb-3"></h3>
+  <label class="text-xs font-bold">Ubicación<select id="cs-loc" class="w-full p-2 border rounded-lg mt-1 mb-2 bg-white font-normal"></select></label>
+  <div class="grid grid-cols-2 gap-2 mb-2 text-xs font-bold"><label>Cantidad<input id="cs-cant" type="number" step="any" value="1" class="w-full p-2 border rounded-lg mt-1 font-normal"></label>
+  <label>Unidad<select id="cs-ud" class="w-full p-2 border rounded-lg mt-1 bg-white font-normal"><option value="ud">unidades</option><option value="rac">raciones</option><option value="kg">kg</option><option value="l">litros</option></select></label></div>
+  <label class="text-xs font-bold">Caducidad (opcional)<input type="date" id="cs-cad" class="w-full p-2 border rounded-lg mt-1 mb-3 font-normal"></label>
+  <div class="flex gap-2"><button onclick="cerrar('m-cs');CSQ=[]" class="px-3 bg-slate-100 rounded-xl text-sm">Parar</button><button onclick="csNext()" class="px-3 bg-slate-100 rounded-xl text-sm">Saltar</button><button onclick="csOk()" class="flex-1 bg-emerald-600 text-white py-2.5 rounded-xl font-bold">Añadir</button></div></div></div>
+
+<!-- Modal plato sin receta -->
+<div id="m-plato" class="fixed inset-0 bg-black/50 hidden z-50 items-end sm:items-center justify-center"><div class="bg-white rounded-t-2xl sm:rounded-2xl max-w-sm w-full p-5">
+  <p id="pt-tit" class="font-bold mb-3"></p><div class="grid gap-2"><button onclick="ptCrear()" class="bg-slate-800 text-white py-2 rounded-xl text-sm font-bold">Escribir la receta yo</button><button onclick="ptIA()" class="bg-indigo-600 text-white py-2 rounded-xl text-sm font-bold">Pedirla a una IA</button><button onclick="cerrar('m-plato')" class="bg-slate-100 py-2 rounded-xl text-sm">Cerrar</button></div></div></div>
 
 <!-- Modal ticket -->
 <div id="m-tk" class="fixed inset-0 bg-black/50 hidden z-50 items-end sm:items-center justify-center">
@@ -746,7 +789,7 @@ function render() {
       <button onclick="verHist(${i})" class="flex-1 text-left min-w-0"><p class="font-medium truncate">${esc(s.prod)}</p>
         <p class="text-xs text-slate-500">${fmtC(s)}${s.fmt ? ' · ' + esc(s.fmt) : ''}</p>
         <p class="text-xs">${caducidad(s.cad)}${NSC[s.ns] ? ` <span class="ml-1 text-white px-1.5 rounded uppercase font-bold ${NSC[s.ns]}">${s.ns}</span>` : ''}</p></button>
-      <div class="flex gap-4 text-lg"><button onclick="abrirMov(${i})" title="Mover" class="text-emerald-600"><i class="fa-solid fa-right-left"></i></button><button onclick="abrirMov(${i},'baja')" title="Consumido" class="text-slate-500"><i class="fa-solid fa-utensils"></i></button></div></div>`;
+      <div class="flex gap-4 text-lg">${/^(cocina|sotano)/.test(s.loc) ? `<button onclick="abrirPlan(${i})" title="Planificar descongelación" class="text-sky-600"><i class="fa-regular fa-snowflake"></i></button>` : ''}<button onclick="abrirMov(${i})" title="Mover" class="text-emerald-600"><i class="fa-solid fa-right-left"></i></button><button onclick="abrirMov(${i},'baja')" title="Consumido" class="text-slate-500"><i class="fa-solid fa-utensils"></i></button></div></div>`;
   });
   $('lista').innerHTML = h || '<p class="text-xs text-slate-400 text-center py-4">Sin productos aquí todavía.</p>';
 }
@@ -959,6 +1002,216 @@ function tkConfirmar() {
   render(); alert(n + ' productos añadidos al inventario.');
 }
 </script>
+<script>
+/* ===== v2.3: descongelación planificada y sugerencias de reposición ===== */
+let PLAN = [], IGN = [], SUG = [], PL = null;
+const ymd = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+const enDias = n => { const d = new Date(); d.setDate(d.getDate() + n); return d; };
+const ik = k => encodeURIComponent(k).slice(0, 200);
+
+function abrirPlan(i) {
+  PL = VIS[i]; $('pl-tit').textContent = PL.prod; $('pl-inf').textContent = 'Hay ' + fmtC(PL) + ' en ' + LOCS[PL.loc];
+  $('pl-fecha').value = ymd(enDias(1)); $('pl-cant').value = Math.min(PL.cant, 1); abrir('m-plan');
+}
+function guardarPlan() {
+  const q = +$('pl-cant').value, f = $('pl-fecha').value;
+  if (!f || !(q > 0) || q > PL.cant + 0.0001) return alert('Revisa la fecha y la cantidad (máximo ' + PL.cant + ').');
+  fb.set('plan', 'p' + Date.now(), { prod: PL.prod, loc: PL.loc, cad: PL.cad || '', cant: q, ud: PL.ud, fecha: f, hecho: false, t: Date.now() });
+  cerrar('m-plan');
+}
+function planHecho(id) {
+  const p = PLAN.find(x => x.id === id), s = STOCK.find(x => x.prod === p.prod && x.loc === p.loc && x.cad === (p.cad || ''));
+  if (!s || s.cant < p.cant - 0.0001) return alert('Ya no hay esa cantidad en ' + (LOCS[p.loc] || p.loc) + '. Revisa el inventario o quita el aviso.');
+  mov({ prod: s.prod, cod: s.cod || '', cant: p.cant, ud: s.ud, cad: s.cad, fmt: s.fmt || '', img: s.img || '', ns: s.ns || '', de: p.loc, a: 'frigo', tipo: 'mov', nota: 'descongelación' });
+  const { id: _, ...d } = p; fb.set('plan', id, { ...d, hecho: true });
+}
+function pintaAvisos() {
+  const hoy = ymd(new Date()), man = ymd(enDias(1)), L = PLAN.filter(p => !p.hecho).sort((a, b) => a.fecha.localeCompare(b.fecha));
+  $('avisos').innerHTML = L.length ? `<div class="bg-sky-50 border border-sky-200 rounded-xl p-3 text-xs"><p class="font-bold text-sky-800 mb-2"><i class="fa-regular fa-snowflake mr-1"></i>Descongelación planificada</p>` + L.map(p => {
+    const due = p.fecha <= man, et = p.fecha < hoy ? '⚠️ fecha pasada' : p.fecha === hoy ? 'para hoy' : p.fecha === man ? 'para mañana' : 'el ' + p.fecha.split('-').reverse().join('/');
+    return `<div class="flex items-center justify-between gap-2 py-1 ${due ? '' : 'opacity-60'}"><span>${due ? '<b>Pasar hoy al frigorífico:</b> ' : ''}${esc(p.prod)} ×${p.cant} ${UDN[p.ud] || ''} · ${et}<br><span class="text-slate-500">${esc(LOCS[p.loc] || p.loc)}</span></span><span class="flex gap-2 shrink-0 items-center">${due ? `<button onclick="planHecho('${p.id}')" class="bg-sky-600 text-white rounded px-2 py-1 font-bold">Pasar</button>` : ''}<button onclick="fb.del('plan','${p.id}')" class="text-slate-400 px-1"><i class="fa-solid fa-xmark"></i></button></span></div>`;
+  }).join('') + `<p class="text-[10px] text-slate-400 mt-2">Tras descongelar, consume pronto y no vuelvas a congelar. Los avisos salen al abrir la app.</p></div>` : '';
+}
+
+function calcSug() {
+  const m = {}, tot = {};
+  MOVS.forEach(x => {
+    const k = sinAc(x.prod), e = m[k] = m[k] || { prod: x.prod, altas: 0, cons: 0, lastAlta: 0, ud: x.ud };
+    if (x.tipo === 'alta') { e.altas++; e.lastAlta = Math.max(e.lastAlta, x.t); }
+    if (x.tipo === 'baja' && x.nota === 'consumido') e.cons++;
+  });
+  STOCK.forEach(s => { const k = sinAc(s.prod); tot[k] = (tot[k] || 0) + s.cant; });
+  const lista = COMPRA.filter(c => !c.hecho).map(c => sinAc(c.n));
+  SUG = Object.entries(m).map(([k, e]) => {
+    const q = tot[k] || 0; let r = '';
+    if (q <= 0.0001 && e.cons > 0) r = 'Se ha acabado';
+    else if (q > 0 && q <= 1 && ['ud', 'rac'].includes(e.ud) && e.altas >= 2) r = 'Queda ' + fmtC({ cant: q, ud: e.ud });
+    if (!r) return null;
+    const ig = IGN.find(g => g.id === ik(k)); if (ig && ig.t >= e.lastAlta) return null;
+    if (lista.some(n => n.includes(k) || k.includes(n))) return null;
+    return { k, prod: e.prod, r };
+  }).filter(Boolean);
+}
+const sugHTML = () => SUG.length ? `<div class="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs mb-3"><p class="font-bold text-amber-800 mb-2">Sugerencias de reposición</p>` + SUG.map((s, i) => `<div class="flex items-center justify-between py-1"><span>${esc(s.prod)} <span class="text-slate-500">· ${esc(s.r)}</span></span><span class="flex gap-3 items-center"><button onclick="sugAdd(${i})" class="bg-amber-600 text-white rounded px-2 py-1 font-bold">Añadir</button><button onclick="sugIgn(${i})" class="text-slate-400">Ignorar</button></span></div>`).join('') + '</div>' : '';
+const sugAdd = i => fb.addCompra({ n: SUG[i].prod, hecho: false, t: Date.now() });
+const sugIgn = i => fb.set('ignorados', ik(SUG[i].k), { t: Date.now() });
+
+const _render = render; render = function () { calcSug(); GN.compra = '🛒 Compra' + (SUG.length ? ' · ' + SUG.length : ''); _render(); pintaAvisos(); };
+const _pintaCompra = pintaCompra; pintaCompra = function () { _pintaCompra(); $('lista').insertAdjacentHTML('afterbegin', sugHTML()); };
+window.onPlan = l => { PLAN = l; render(); };
+window.onIgn = l => { IGN = l; render(); };
+</script>
+<script>
+/* ===== v2.4: menú del cole, búsquedas, compra seleccionada, recetas desde los menús ===== */
+const PDFJS = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js', PDFW = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+let COLE = [], PREV = null, PLT = [], CSQ = [], CSI = null, PTN = '';
+const platoBtn = t => { PLT.push(t); return `<button onclick="verPlato(${PLT.length - 1})" class="underline text-left text-emerald-700">${esc(t)}</button>`; };
+
+/* Plato -> receta */
+function verPlato(i) {
+  const n = sinAc(PLT[i]); PTN = PLT[i];
+  const best = todas().map(r => ({ r, c: clavesDe(r).filter(k => n.includes(k)).length + (sinAc(r.n).split(' ').filter(w => w.length > 3 && n.includes(w)).length) })).sort((a, b) => b.c - a.c)[0];
+  if (best && best.c >= 2 || (best && best.c >= 1 && clavesDe(best.r).length <= 3)) return verReceta(best.r.id);
+  $('pt-tit').textContent = 'No tengo una receta de «' + PTN + '».'; abrir('m-plato');
+}
+const ptCrear = () => { cerrar('m-plato'); formReceta(); $('rf-n').value = PTN; };
+const ptIA = () => { cerrar('m-plato'); $('lt-tema').value = PTN; $('lt-n').value = 3; abrir('m-lote'); };
+function menuAdultos() {
+  const p = +$('n-pers').value || 1, dias = +$('n-dias').value, f = (+$('n-kcal').value || 2000) / 2000; let h = '';
+  for (let d = 0; d < dias; d++) {
+    const c = COMIDAS[d % 7], ce = COMIDAS[(d + 3) % 7];
+    h += `<div class="bg-slate-50 rounded-xl p-3 text-xs"><p class="font-bold text-slate-700 mb-1">Día ${d + 1}</p><p><b>Comida:</b> ${platoBtn(c[0])}<br><span class="text-slate-500">por persona: ${esc(escala(c[1], f))}</span></p><p class="mt-1"><b>Cena:</b> ${platoBtn(ce[0])}<br><span class="text-slate-500">por persona: ${esc(escala(ce[1], f * .8))}</span></p></div>`;
+  }
+  $('n-res').innerHTML = `<p class="text-xs text-slate-500">Para ${p} comensal(es). Pulsa un plato para ver su receta.</p>` + h;
+}
+function menuBebe() {
+  const m = [['b-des', 'Desayuno', 'Leche o fórmula + fruta o cereales sin azúcar'], ['b-mer', 'Merienda', 'Fruta troceada o yogur natural'], ['b-cen', 'Cena', 'Verduras con proteína suave (pescado, huevo, pollo) + fruta']];
+  $('b-res').innerHTML = m.filter(x => $(x[0]).checked).map(x => `<div class="bg-slate-50 rounded-xl p-3 text-xs"><b>${x[1]}:</b> ${platoBtn(x[2])}</div>`).join('') || '<p class="text-xs text-slate-400">Sin comidas en casa seleccionadas.</p>';
+}
+
+/* Buscar receta, editar copia */
+function buscaReceta() {
+  const q = sinAc($('ch-q').value.trim()); if (!q) { $('chef-res').innerHTML = ''; return; }
+  const r = todas().filter(x => sinAc(x.n).includes(q));
+  $('chef-res').innerHTML = r.length ? r.map(x => `<button onclick="verReceta('${x.id}')" class="w-full text-left bg-emerald-50 border border-emerald-100 rounded-xl p-3 font-medium text-emerald-800 text-sm">${esc(x.n)}</button>`).join('') : '<p class="text-xs text-slate-500">Ninguna receta con ese nombre.</p>';
+}
+const _vr = verReceta; verReceta = function (id) { _vr(id); if (id[0] === 'b') $('m-acc').innerHTML = `<button onclick="editarCopia('${id}')" class="flex-1 bg-slate-100 py-2.5 rounded-xl font-bold text-sm">Editar (guarda una copia tuya)</button>`; };
+const editarCopia = id => { formReceta(id); editId = null; };
+
+/* Buscar alimento */
+function abrirBus() { $('bus-q').value = ''; busca(); abrir('m-bus'); setTimeout(() => $('bus-q').focus(), 60); }
+function busca() {
+  const raw = $('bus-q').value.trim(), q = sinAc(raw);
+  if (!q) return ($('bus-res').innerHTML = '<p class="text-xs text-slate-400">Escribe el nombre de un alimento.</p>');
+  const r = STOCK.filter(s => sinAc(s.prod).includes(q)).sort((a, b) => a.prod.localeCompare(b.prod));
+  const enLista = COMPRA.some(c => !c.hecho && sinAc(c.n).includes(q));
+  $('bus-res').innerHTML = r.length ? r.map(s => `<div class="bg-slate-50 rounded-lg p-2 text-sm"><b>${esc(s.prod)}</b> · ${fmtC(s)}<br><span class="text-xs text-slate-500">${esc(LOCS[s.loc])}${s.cad ? ' · caduca ' + esc(s.cad) : ''}</span></div>`).join('')
+    : `<p class="text-sm text-amber-700">No hay «${esc(raw)}» en el inventario.${enLista ? ' Está en la lista de la compra.' : ''}</p>`;
+}
+
+/* Compra seleccionada -> inventario */
+function compraSel() { CSQ = COMPRA.filter(c => c.hecho); if (!CSQ.length) return alert('Marca primero con la casilla lo que ya has comprado.'); CSN = CSQ.length; csNext(); }
+let CSN = 0;
+function csNext() {
+  CSI = CSQ.shift(); if (!CSI) { cerrar('m-cs'); return render(); }
+  $('cs-pos').textContent = (CSN - CSQ.length) + ' de ' + CSN; $('cs-tit').textContent = CSI.n;
+  $('cs-loc').innerHTML = optsLoc(); $('cs-loc').value = tkLoc(CSI.n); $('cs-cant').value = 1; $('cs-ud').value = 'ud'; $('cs-cad').value = ''; abrir('m-cs');
+}
+function csOk() {
+  const q = +$('cs-cant').value; if (!(q > 0)) return alert('Pon una cantidad.');
+  mov({ prod: CSI.n, cod: '', cant: q, ud: $('cs-ud').value, cad: $('cs-cad').value, fmt: '', img: '', ns: '', de: '', a: $('cs-loc').value, tipo: 'alta', nota: 'compra' });
+  fb.delCompra(CSI.id); csNext();
+}
+
+/* Menú del cole: lectura del PDF por posiciones */
+const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+function parseCole(items) {
+  const it = items.map(t => ({ s: String(t.str || '').trim(), x: t.transform[4], y: t.transform[5], h: Math.abs(t.transform[3]) })).filter(t => t.s);
+  const hs = it.map(t => t.h).sort((a, b) => a - b), med = hs[hs.length >> 1], thr = med * 1.15;
+  const mm = new RegExp('(' + MESES.join('|') + ')\\s+(20\\d\\d)', 'i').exec(it.map(t => t.s).join(' '));
+  if (!mm) throw new Error('no encuentro el mes y el año en el PDF');
+  const mes = MESES.indexOf(mm[1].toLowerCase()) + 1, anio = +mm[2];
+  const nums = it.filter(t => /^\d{1,2}$/.test(t.s) && +t.s >= 1 && +t.s <= 31 && t.h >= thr && t.h <= med * 1.6);
+  const cl = (arr, tol) => { const o = []; arr.forEach(v => { if (!o.some(c => Math.abs(c - v) < tol)) o.push(v); }); return o; };
+  const cx = cl(nums.map(n => n.x), 6).sort((a, b) => a - b), ry = cl(nums.map(n => n.y), 4).sort((a, b) => b - a);
+  if (cx.length !== 5) throw new Error('el calendario no tiene el formato esperado (' + cx.length + ' columnas)');
+  const w = cx[1] - cx[0], out = {};
+  nums.forEach(n => {
+    const c = cx.findIndex(v => Math.abs(v - n.x) < 6), r = ry.findIndex(v => Math.abs(v - n.y) < 4), yBot = r + 1 < ry.length ? ry[r + 1] + 4 : 70;
+    const cell = it.filter(t => t.h < thr && t.x >= cx[c] - 3 && t.x < cx[c] + w - 2 && t.y < n.y - 6 && t.y > yBot);
+    const lines = {}; cell.forEach(t => { (lines[Math.round(t.y / 2)] = lines[Math.round(t.y / 2)] || []).push(t); });
+    const L = Object.keys(lines).map(Number).sort((a, b) => b - a).map(k => lines[k].sort((a, b) => a.x - b.x).map(t => t.s).join(' ').replace(/\s+/g, ' ').trim());
+    const items2 = []; L.forEach(l => { if (items2.length && (/^[a-záéíóúñ(]/.test(l))) items2[items2.length - 1] += ' ' + l; else items2.push(l); });
+    out[+n.s] = items2;
+  });
+  return { anio, mes, dias: out };
+}
+async function colePDF(inp) {
+  const f = inp.files[0]; if (!f) return; $('co-est').textContent = 'Leyendo PDF…';
+  try {
+    if (!window.pdfjsLib) { await cargarScript(PDFJS); pdfjsLib.GlobalWorkerOptions.workerSrc = PDFW; }
+    const pdf = await pdfjsLib.getDocument({ data: await f.arrayBuffer() }).promise, tc = await (await pdf.getPage(1)).getTextContent();
+    PREV = parseCole(tc.items); const n = Object.keys(PREV.dias).length;
+    $('co-est').textContent = `${n} días de ${MESES[PREV.mes - 1]} ${PREV.anio}. Revisa y guarda:`;
+    $('co-prev').innerHTML = Object.keys(PREV.dias).map(Number).sort((a, b) => a - b).map(d => `<div class="bg-white rounded-lg p-2 mb-1 text-[11px]"><b>${d}</b>: ${esc(PREV.dias[d].join(' · '))}</div>`).join('') + `<button onclick="coleGuardar()" class="w-full bg-emerald-600 text-white py-2 rounded-lg text-xs font-bold mt-1 mb-2">Guardar menú del mes</button>`;
+  } catch (e) { $('co-est').textContent = 'No se pudo leer el PDF: ' + (e.message || e) + '. Puedes añadir los días a mano.'; }
+  inp.value = '';
+}
+function coleGuardar() {
+  Object.keys(PREV.dias).forEach(d => { const it = PREV.dias[d]; if (!it.length) return; const f = PREV.anio + '-' + String(PREV.mes).padStart(2, '0') + '-' + String(d).padStart(2, '0'); fb.set('colegio', f, { fecha: f, items: it, t: Date.now() }); });
+  $('co-prev').innerHTML = ''; $('co-est').textContent = 'Menú guardado y sincronizado.'; PREV = null;
+}
+function coleManual() { const f = $('co-f').value, it = lineas($('co-t').value); if (!f || !it.length) return alert('Pon la fecha y al menos un plato.'); fb.set('colegio', f, { fecha: f, items: it, t: Date.now() }); $('co-t').value = ''; }
+function cenaEspejo(items) {
+  const t = sinAc(items.join(' ')), r = [];
+  if (/pescad|merluza|rape|bacalao|salmon|lubina|dorada/.test(t)) r.push('huevo o carne blanca (pollo, pavo o conejo)');
+  if (/pollo|lomo|cerdo|ternera|carne|hamburguesa|albondiga|ragout|filete|jamon/.test(t)) r.push('pescado (blanco o azul) o huevo');
+  if (/pasta|macarron|arroz|lenteja|garbanzo|alubia|fideua|cous|codito|cocido/.test(t)) r.push('verdura cocinada u hortalizas (ensalada, crema o puré)');
+  if (!r.length && /verdura|judias|crema|pure|brocoli|espinaca|coliflor|calabaz|zanahoria/.test(t)) r.push('cereal o tubérculo (arroz, pasta, patata o pan integral)');
+  return r;
+}
+function pintaCole() {
+  const hoy = ymd(new Date()), L = COLE.filter(d => d.fecha >= hoy).sort((a, b) => a.fecha.localeCompare(b.fecha)).slice(0, 7);
+  $('co-lista').innerHTML = L.length ? L.map(d => {
+    const dt = new Date(d.fecha + 'T12:00:00'), plato = d.items.filter(x => !/^pan( integral)? y agua$/i.test(x)), fest = d.items.length === 1 && /festivo/i.test(d.items[0]), ce = fest ? [] : cenaEspejo(plato);
+    return `<div class="bg-white rounded-lg p-2 mb-2 text-xs"><p class="font-bold text-slate-700">${dt.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'short' })}</p>${plato.map(x => '<p>• ' + (fest ? esc(x) : platoBtn(x)) + '</p>').join('')}${ce.length ? `<p class="mt-1 text-sky-800"><b>Cena sugerida:</b> ${esc(ce.join(' / '))}</p>` : ''}</div>`;
+  }).join('') : '<p class="text-[11px] text-slate-400">Aún no hay menú del cole guardado para los próximos días.</p>';
+}
+window.onCole = l => { COLE = l; pintaCole(); };
+</script>
+<script>
+/* ===== v2.5: recetas con todo disponible frente a recetas a las que les falta algo ===== */
+const BASICOS = /^(sal|aceite|agua|pimienta|vinagre|especias?)\b/;
+const nombresStock = () => STOCK.filter(s => !['limpieza', 'mascotas'].includes(s.loc)).map(s => sinAc(s.prod));
+const reqDe = r => {
+  if (r.i && r.i.length) return clavesDe(r).filter(k => !BASICOS.test(k));
+  const t = sinAc(r.n + ' ' + r.p.map(x => x.t).join(' '));
+  return (r.k || []).filter(k => t.includes(k) && !BASICOS.test(k));
+};
+const faltantes = (r, ns) => reqDe(r).filter(k => !ns.some(n => n.includes(k) || (n.length > 2 && k.includes(n))));
+const btnReceta = (x, extra) => `<button onclick="verReceta('${x.id}')" class="w-full text-left rounded-xl p-3 font-medium text-sm ${extra ? 'bg-amber-50 border border-amber-200 text-amber-900' : 'bg-emerald-50 border border-emerald-100 text-emerald-800'}">${x.id[0] === 'c' ? '<i class="fa-solid fa-user mr-1 text-xs"></i>' : ''}${esc(x.n)}</button>`;
+function buscarRecetas(todo) {
+  if (todo) { $('chef-res').innerHTML = todas().map(x => btnReceta(x)).join(''); return; }
+  const sel = selActual().map(sinAc).filter(x => x.length > 2);
+  if (sel.length < 2) return ($('chef-res').innerHTML = '<p class="text-xs text-amber-600">Selecciona al menos 2 ingredientes.</p>');
+  const ns = nombresStock(), ok = [], falta = [];
+  todas().forEach(x => {
+    const c = clavesDe(x).filter(k => sel.some(s => s.includes(k) || k.includes(s))).length;
+    if (c < 2) return;
+    const f = faltantes(x, ns); (f.length ? falta : ok).push({ x, c, f });
+  });
+  ok.sort((a, b) => b.c - a.c); falta.sort((a, b) => a.f.length - b.f.length || b.c - a.c);
+  let h = `<p class="font-bold text-emerald-700 text-sm mb-1">✅ Puedes cocinarlas ya (${ok.length})</p>` + (ok.length ? `<div class="space-y-2 mb-4">${ok.map(o => btnReceta(o.x)).join('')}</div>` : '<p class="text-xs text-slate-400 mb-4">Ninguna receta tiene todos sus ingredientes en el inventario.</p>');
+  h += `<p class="font-bold text-amber-700 text-sm mb-1">🛒 Con tus ingredientes, pero te falta algo (${falta.length})</p>` + (falta.length ? falta.map(o => `<div class="mb-2">${btnReceta(o.x, 1)}<p class="text-[11px] text-amber-800 mt-1">Falta: ${esc(o.f.join(', '))} <button onclick="faltaCompra('${o.x.id}')" class="underline font-bold ml-1">Añadir a la compra</button></p></div>`).join('') : '<p class="text-xs text-slate-400">Ninguna.</p>');
+  h += '<p class="text-[10px] text-slate-400 mt-3">En las recetas de ejemplo los ingredientes se estiman a partir de sus pasos y no incluyen cantidades. Sal, aceite, agua, pimienta y vinagre se dan por disponibles.</p>';
+  $('chef-res').innerHTML = h;
+}
+function faltaCompra(id) {
+  const r = getRec(id), ns = nombresStock(), f = faltantes(r, ns), ya = COMPRA.filter(c => !c.hecho).map(c => sinAc(c.n)); let n = 0;
+  f.filter(k => !ya.some(y => y.includes(k))).forEach(k => { fb.addCompra({ n: k.charAt(0).toUpperCase() + k.slice(1), hecho: false, t: Date.now() }); n++; });
+  alert(n ? n + ' producto(s) añadidos a la lista de la compra.' : 'Todo lo que falta ya estaba en la lista de la compra.');
+}
+</script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -976,15 +1229,19 @@ window.fb = {
   setCompra: (id, d) => updateDoc(doc(db, 'compra', id), d),
   delCompra: id => deleteDoc(doc(db, 'compra', id)),
   setReceta: (id, d) => setDoc(doc(db, 'recetas', id), d),
-  delReceta: id => deleteDoc(doc(db, 'recetas', id))
+  delReceta: id => deleteDoc(doc(db, 'recetas', id)),
+  set: (c, id, d) => setDoc(doc(db, c, id), d), del: (c, id) => deleteDoc(doc(db, c, id))
 };
-let u1, u2, u3;
+let u1, u2, u3, u4, u5, u6;
 onAuthStateChanged(auth, u => {
-  window.onUser(u); if (u1) u1(); if (u2) u2(); if (u3) u3(); u1 = u2 = u3 = null;
+  window.onUser(u); if (u1) u1(); if (u2) u2(); if (u3) u3(); if (u4) u4(); if (u5) u5(); if (u6) u6(); u1 = u2 = u3 = u4 = u5 = u6 = null;
   if (!u) { window.onMovs([], false); window.onCompra([]); return; }
   u1 = onSnapshot(query(collection(db, 'mov'), orderBy('t')), { includeMetadataChanges: true }, sn => window.onMovs(sn.docs.map(d => ({ id: d.id, ...d.data() })), sn.metadata.fromCache), e => console.error(e));
   u2 = onSnapshot(collection(db, 'compra'), sn => window.onCompra(sn.docs.map(d => ({ id: d.id, ...d.data() }))), e => console.error(e));
   u3 = onSnapshot(collection(db, 'recetas'), sn => window.onRecetas(sn.docs.map(d => ({ id: d.id, ...d.data() }))), e => console.error(e));
+  u4 = onSnapshot(collection(db, 'plan'), sn => window.onPlan(sn.docs.map(d => ({ id: d.id, ...d.data() }))), e => console.error(e));
+  u5 = onSnapshot(collection(db, 'ignorados'), sn => window.onIgn(sn.docs.map(d => ({ id: d.id, ...d.data() }))), e => console.error(e));
+  u6 = onSnapshot(collection(db, 'colegio'), sn => window.onCole(sn.docs.map(d => ({ id: d.id, ...d.data() }))), e => console.error(e));
 });
 </script>
 </body>
