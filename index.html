@@ -810,8 +810,10 @@ function altaManual() {
   mov({ prod: n, cod: '', cant: q, ud: $('p-ud').value, cad: $('p-cad').value, fmt: '', img: '', ns: '', de: '', a: $('p-cat').value, tipo: 'alta', nota: '' });
   $('p-nombre').value = ''; $('p-cad').value = ''; TAB = grupoDe($('p-cat').value); render();
 }
-function abrirMov(i, modo) {
-  MV = VIS[i]; $('mv-tit').textContent = MV.prod; $('mv-inf').textContent = 'Hay ' + fmtC(MV) + ' en ' + LOCS[MV.loc]; $('mv-cant').value = MV.cant;
+function abrirMov(i, modo) { abrirMovStock(VIS[i], modo); }
+function abrirMovStock(stock, modo) {
+  if (!stock) return;
+  MV = stock; $('mv-tit').textContent = MV.prod; $('mv-inf').textContent = 'Hay ' + fmtC(MV) + ' en ' + LOCS[MV.loc]; $('mv-cant').value = MV.cant;
   $('mv-dest').innerHTML = '<option value="@consumido">✅ Consumido (baja)</option><option value="@tirado">🗑️ Tirado (baja)</option>' + optsLoc(MV.loc);
   $('mv-dest').value = modo === 'baja' ? '@consumido' : (MV.loc === 'frigo' ? 'despensa' : 'frigo'); abrir('m-mov');
 }
@@ -1116,7 +1118,7 @@ function busca() {
   if (!q) return ($('bus-res').innerHTML = '<p class="text-xs text-slate-400">Escribe el nombre de un alimento.</p>');
   const r = STOCK.filter(s => sinAc(s.prod).includes(q)).sort((a, b) => a.prod.localeCompare(b.prod));
   const enLista = COMPRA.some(c => !c.hecho && sinAc(c.n).includes(q));
-  $('bus-res').innerHTML = r.length ? r.map(s => `<div class="bg-slate-50 rounded-lg p-2 text-sm"><b>${esc(s.prod)}</b> · ${fmtC(s)}<br><span class="text-xs text-slate-500">${esc(LOCS[s.loc])}${s.cad ? ' · caduca ' + esc(s.cad) : ''}</span></div>`).join('')
+  $('bus-res').innerHTML = r.length ? r.map(s => `<button type="button" onclick="abrirMovStock(STOCK[${STOCK.indexOf(s)}])" class="w-full text-left bg-slate-50 hover:bg-emerald-50 rounded-lg p-3 text-sm border border-transparent hover:border-emerald-200"><div class="flex items-center justify-between gap-2"><span><b>${esc(s.prod)}</b> · ${fmtC(s)}</span><i class="fa-solid fa-chevron-right text-slate-400"></i></div><span class="text-xs text-slate-500">${esc(LOCS[s.loc])}${s.cad ? ' · caduca ' + esc(s.cad) : ''}</span><span class="block text-[11px] text-emerald-700 mt-1">Toca para moverlo o marcarlo como consumido</span></button>`).join('')
     : `<p class="text-sm text-amber-700">No hay «${esc(raw)}» en el inventario.${enLista ? ' Está en la lista de la compra.' : ''}</p>`;
 }
 
