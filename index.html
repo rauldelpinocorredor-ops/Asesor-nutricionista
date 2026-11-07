@@ -301,11 +301,14 @@ input,select,button{font-size:16px} /* evita zoom en iOS */
 <!-- Modal ficha -->
 <div id="m-ficha" class="fixed inset-0 bg-black/60 hidden z-50 items-end sm:items-center justify-center">
   <div class="bg-white rounded-t-2xl sm:rounded-2xl max-w-lg w-full p-4 max-h-[92vh] overflow-y-auto">
-    <div class="flex justify-between mb-1"><h3 class="font-bold">Ficha del producto</h3><button onclick="cerrar('m-ficha')" class="text-slate-400 text-xl"><i class="fa-solid fa-xmark"></i></button></div>
+    <div class="flex justify-between mb-1"><h3 id="f-tit" class="font-bold">Ficha del producto</h3><button onclick="cerrar('m-ficha')" class="text-slate-400 text-xl"><i class="fa-solid fa-xmark"></i></button></div>
     <p id="f-aviso" class="text-xs text-slate-500 mb-2"></p>
     <div class="flex gap-3 mb-3">
       <img id="f-img" alt="" class="w-20 h-20 object-contain bg-slate-50 rounded hidden">
-      <div class="flex-1 space-y-2"><input id="f-n" placeholder="Nombre" class="w-full p-2 border rounded-lg text-sm"><input id="f-marca" placeholder="Marca" class="w-full p-2 border rounded-lg text-sm"></div>
+      <div class="flex-1 space-y-2">
+        <label class="block text-xs font-bold text-slate-600">Nombre del alimento (editable)<input id="f-n" placeholder="Nombre del alimento" autocomplete="off" class="w-full p-2 border rounded-lg text-sm font-normal mt-1"></label>
+        <input id="f-marca" placeholder="Marca" class="w-full p-2 border rounded-lg text-sm">
+      </div>
     </div>
     <div class="grid grid-cols-2 gap-2 mb-2 text-xs font-bold text-slate-600">
       <label>Cantidad<input id="f-cant" class="w-full p-2 border rounded-lg mt-1 font-normal text-sm"></label>
@@ -320,7 +323,7 @@ input,select,button{font-size:16px} /* evita zoom en iOS */
     <div id="f-info" class="text-xs text-slate-600 space-y-2 mb-3"></div>
     <div class="flex gap-2">
       <button id="f-del" onclick="borrarFicha()" class="hidden px-4 py-2.5 rounded-xl bg-red-50 text-red-600 text-sm font-bold">Eliminar</button>
-      <button onclick="guardarFicha()" class="flex-1 bg-emerald-600 text-white py-2.5 rounded-xl font-bold text-sm">Guardar en despensa</button>
+      <button id="f-save" onclick="guardarFicha()" class="flex-1 bg-emerald-600 text-white py-2.5 rounded-xl font-bold text-sm">Guardar en despensa</button>
     </div>
     <p class="text-[10px] text-slate-400 mt-2">Datos de productos: Open Food Facts y proyectos hermanos (licencia ODbL). Pueden estar incompletos o ser incorrectos: revisa la etiqueta, sobre todo los alérgenos.</p>
   </div>
@@ -456,7 +459,9 @@ const fmt = v => v == null ? '—' : (Math.round(v * 10) / 10).toString().replac
 function abrirFicha(id, aviso, datos) {
   const it = id ? S.inv.find(x => x.id === id) : null;
   F = it ? { ...it } : { id: null, ud: 1, buy: false, ...datos };
-  $('f-aviso').textContent = aviso || (F.fuente ? 'Datos de ' + F.fuente + ' · revisa y completa la caducidad.' : '');
+  $('f-tit').textContent = it ? 'Editar alimento' : 'Ficha del producto';
+  $('f-save').textContent = it ? 'Guardar cambios' : 'Guardar en despensa';
+  $('f-aviso').textContent = aviso || (F.fuente ? 'Datos de ' + F.fuente + ' · revisa y completa la caducidad.' : (it ? 'Puedes modificar el nombre y los demás datos del alimento.' : ''));
   $('f-n').value = F.n || ''; $('f-marca').value = F.marca || ''; $('f-cant').value = F.cant || '';
   $('f-ud').value = F.ud || 1; $('f-cat').value = F.cat || 'general'; $('f-cad').value = F.cad || '';
   const im = $('f-img'); if (okImg(F.img)) { im.src = F.img; im.classList.remove('hidden'); } else im.classList.add('hidden');
