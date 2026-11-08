@@ -1,4 +1,4 @@
-const V = 'nutri-v15';
+const V = 'nutri-v16';
 const CORE = ['./', 'index.html', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png'];
 const EXT = [
   'https://cdn.tailwindcss.com/3.4.17',
@@ -17,7 +17,7 @@ self.addEventListener('activate', e => e.waitUntil((async () => {
 })()));
 self.addEventListener('fetch', e => {
   const r = e.request, u = new URL(r.url);
-  const PROPIOS = [location.host, 'cdn.tailwindcss.com', 'cdnjs.cloudflare.com', 'cdn.jsdelivr.net', 'www.gstatic.com', 'tessdata.projectnaptha.com'];
+  const PROPIOS = [location.host, 'cdn.tailwindcss.com', 'cdnjs.cloudflare.com', 'cdn.jsdelivr.net', 'www.gstatic.com', 'tessdata.projectnaptha.com', 'fonts.googleapis.com', 'fonts.gstatic.com'];
   if (r.method !== 'GET' || !PROPIOS.includes(u.host) || u.pathname.includes('/api/')) return; // Firebase, APIs de productos y el resto: siempre red, sin caché
   e.respondWith((async () => {
     const c = await caches.open(V), hit = await c.match(r);
