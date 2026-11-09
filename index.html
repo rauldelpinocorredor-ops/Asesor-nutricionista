@@ -359,7 +359,7 @@ input,select,button{font-size:16px} /* evita zoom en iOS */
     <label class="flex items-center gap-2 text-xs mb-3"><input type="checkbox" id="ia-basic" checked class="accent-indigo-600">Permitir básicos de cocina (aceite, sal, agua, especias)</label>
     <div class="border rounded-xl p-3 mb-2">
       <p class="font-bold mb-1">Pide la receta a tu IA favorita</p>
-      <p class="text-[11px] text-slate-500 mb-2">Copia la petición, pégala en Claude, ChatGPT, Gemini u otra IA, y pega aquí su respuesta.</p>
+      <p class="text-[11px] text-slate-500 mb-2">Copia la petición, pégala en ChatGPT, Claude, Gemini u otra IA, y pega aquí la receta que te devuelva.</p>
       <button onclick="copiarPrompt()" class="w-full bg-slate-800 text-white py-2 rounded-lg font-bold text-xs mb-2">Copiar petición</button>
       <textarea id="ia-resp" rows="3" placeholder="Pega aquí la respuesta de Claude" class="w-full p-2 border rounded-lg text-xs mb-2"></textarea>
       <button onclick="importarIA()" class="w-full bg-emerald-600 text-white py-2 rounded-lg font-bold text-xs">Importar receta</button>
@@ -722,9 +722,18 @@ function pintaTimers() {
 const IAK = 'asesor_nutri_ia_key';
 const getKey = () => { try { return localStorage.getItem(IAK) || ''; } catch (e) { return ''; } };
 function abrirIA() {
-  const sel = selActual(); if (!sel.length) return alert('Marca al menos 1 ingrediente de la despensa.');
-  $('ia-res').textContent = sel.join(', '); $('ia-estado').textContent = ''; $('ia-key').value = ''; $('ia-resp').value = '';
-  $('ia-tk').textContent = getKey() ? '(ya hay una guardada)' : ''; abrir('m-ia');
+  const sel = selActual();
+  if (!sel.length) {
+    alert('Marca al menos 1 ingrediente de la despensa antes de preguntar a una IA.');
+    const panel = $('chef-det'); if (panel) panel.open = true;
+    return;
+  }
+  // El flujo de esta ventana es copiar la petición a una IA externa y pegar aquí su respuesta.
+  // No debe depender de campos de API que no existen en el formulario.
+  $('ia-res').textContent = sel.join(', ');
+  $('ia-estado').textContent = '1. Copia la petición. 2. Pégala en ChatGPT, Claude o Gemini. 3. Pega aquí la receta y pulsa «Importar receta».';
+  $('ia-resp').value = '';
+  abrir('m-ia');
 }
 function promptIA() {
   const notas = $('ia-notas').value.trim();
@@ -1743,7 +1752,7 @@ function paintAdultMenu() {
   h+=`<p class="text-[11px] text-amber-700 bg-amber-50 rounded-lg p-2 mb-2">Equilibrio orientativo por grupos de alimentos, no un análisis de nutrientes. Los cambios entre grupos pueden requerir compensaciones; se indicará al elegir.</p>`;
   h+=m.entries.map((day,d)=>`<div class="bg-slate-50 rounded-xl p-3 text-xs mb-2"><p class="font-bold text-slate-700 mb-2">Día ${d+1}</p>${m.meals.map(meal=>{
     const dish=day[meal], opts=adultAltOptions(meal,dish);
-    return `<label class="block mb-2"><b class="capitalize">${meal}:</b><select class="w-full p-2 border rounded-lg bg-white mt-1" onchange="adultChange(${d},'${meal}',this.value)"><option value="${menuEscape(dish)}">${menuEscape(dish)}</option>${opts.map(x=>`<option value="${menuEscape(x)}">${menuEscape(x)}</option>`).join('')}</select><span class="text-slate-500 text-[11px]">Ración orientativa por persona; adaptar cantidades según necesidades.</span></label>`;
+    return `<label class="block mb-2"><b class="capitalize">${meal}:</b><div class="flex items-center gap-2 mt-1"><div class="min-w-0 flex-1"><select class="w-full p-2 border rounded-lg bg-white" onchange="adultChange(${d},'${meal}',this.value)"><option value="${menuEscape(dish)}">${menuEscape(dish)}</option>${opts.map(x=>`<option value="${menuEscape(x)}">${menuEscape(x)}</option>`).join('')}</select></div>${platoBtn(dish)}</div><span class="text-slate-500 text-[11px]">Ración orientativa por persona; adaptar cantidades según necesidades.</span></label>`;
   }).join('')}</div>`).join('');
   $('n-res').innerHTML=h+`<div class="grid grid-cols-2 gap-2"><button onclick="saveAdultMenu()" class="bg-indigo-600 text-white rounded-xl py-2 text-sm font-bold">Guardar menú</button><button onclick="MENU_DB.adultCurrent=null;menuAdultos()" class="bg-slate-700 text-white rounded-xl py-2 text-sm font-bold">Generar otro</button></div>`;
 }
@@ -1784,7 +1793,7 @@ function menuBebe() {
   meals.forEach(meal=>{if(!MENU_DB.babyCurrent.entries[meal]) MENU_DB.babyCurrent.entries[meal]=MENU_BABY_CATALOG[meal][0];});
   $('b-res').innerHTML=map.filter(x=>$(x[0]).checked).map(([id,meal,label])=>{
     const val=MENU_DB.babyCurrent.entries[meal]||MENU_BABY_CATALOG[meal][0];
-    return `<div class="bg-slate-50 rounded-xl p-3 text-xs mb-2"><b>${label}:</b><select class="w-full p-2 border rounded-lg bg-white mt-1" onchange="babyChange('${meal}',this.value)"><option value="${menuEscape(val)}">${menuEscape(val)}</option>${MENU_BABY_CATALOG[meal].filter(v=>v!==val).map(v=>`<option value="${menuEscape(v)}">${menuEscape(v)}</option>`).join('')}</select></div>`;
+    return `<div class="bg-slate-50 rounded-xl p-3 text-xs mb-2"><b>${label}:</b><select class="w-full p-2 border rounded-lg bg-white mt-1" onchange="babyChange('${meal}',this.value)"><option value="${menuEscape(val)}">${menuEscape(val)}</option>${MENU_BABY_CATALOG[meal].filter(v=>v!==val).map(v=>`<option value="${menuEscape(v)}">${menuEscape(v)}</option>`).join('')}</select><div class="mt-1">${platoBtn(val)}</div></div>`;
   }).join('')||'<p class="text-xs text-slate-400">Sin comidas en casa seleccionadas.</p>';
   $('b-res').insertAdjacentHTML('beforeend','<button onclick="saveBabyMenu()" class="w-full bg-indigo-600 text-white rounded-xl py-2 text-sm font-bold mt-2">Guardar menú del bebé</button>');
   menuPersist();
