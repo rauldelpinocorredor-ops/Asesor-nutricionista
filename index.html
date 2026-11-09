@@ -278,6 +278,16 @@ input,select,button{font-size:16px} /* evita zoom en iOS */
 <div id="m-plato" class="fixed inset-0 bg-black/50 hidden z-50 items-end sm:items-center justify-center"><div class="bg-white rounded-t-2xl sm:rounded-2xl max-w-sm w-full p-5">
   <p id="pt-tit" class="font-bold mb-3"></p><div class="grid gap-2"><button onclick="ptCrear()" class="bg-slate-800 text-white py-2 rounded-xl text-sm font-bold">Escribir la receta yo</button><button onclick="ptIA()" class="bg-indigo-600 text-white py-2 rounded-xl text-sm font-bold">Pedirla a una IA</button><button onclick="cerrar('m-plato')" class="bg-slate-100 py-2 rounded-xl text-sm">Cerrar</button></div></div></div>
 
+<!-- Cocinado: descontar del inventario -->
+<div id="m-cocinado" class="fixed inset-0 bg-black/50 hidden z-50 items-end sm:items-center justify-center">
+  <div class="bg-white rounded-t-2xl sm:rounded-2xl max-w-lg w-full p-4 max-h-[94vh] overflow-y-auto text-sm">
+    <div class="flex justify-between mb-1"><h3 class="font-bold">Descontar lo cocinado</h3><button onclick="cerrar('m-cocinado')" class="text-slate-400 text-xl"><i class="fa-solid fa-xmark"></i></button></div>
+    <p id="cd-tit" class="text-xs text-slate-500 mb-2"></p><div id="cd-body" class="space-y-2 mb-3"></div>
+    <div class="bg-slate-50 rounded-xl p-3 mb-3"><p class="text-xs font-bold mb-1">¿Han sobrado raciones?</p><div class="grid grid-cols-2 gap-2"><input id="cd-sob" type="number" min="0" step="1" value="0" class="p-2 border rounded-lg bg-white"><select id="cd-sobloc" class="p-2 border rounded-lg bg-white"></select></div></div>
+    <button onclick="cocinadoOk()" class="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold">Confirmar y descontar</button>
+  </div>
+</div>
+
 <!-- Modo cocina -->
 <div id="m-ck" class="fixed inset-0 z-[80] bg-slate-900 text-white hidden flex-col p-5">
   <div class="flex justify-between items-center mb-3"><p id="ck-t" class="font-bold truncate"></p><button onclick="cocinaCerrar()" class="text-3xl px-2">✕</button></div>
@@ -382,6 +392,7 @@ input,select,button{font-size:16px} /* evita zoom en iOS */
       <video id="video" class="w-full h-full object-cover" autoplay playsinline muted></video>
       <div class="absolute inset-x-8 top-1/2 -translate-y-1/2 h-16 border-2 border-emerald-400 rounded-lg pointer-events-none"></div>
     </div>
+    <div class="grid grid-cols-2 gap-2 mt-2"><button id="sm-alta" onclick="scanModo('alta')" class="py-2 rounded-lg text-xs font-bold">Añadir producto</button><button id="sm-baja" onclick="scanModo('baja')" class="py-2 rounded-lg text-xs font-bold">Dar de baja</button></div>
     <p id="scan-msg" class="text-xs text-slate-500 my-2">Iniciando cámara…</p>
     <label class="block text-center bg-slate-100 rounded-lg py-2 text-xs font-bold text-slate-700 mb-2"><i class="fa-solid fa-camera-retro mr-1"></i>Hacer foto al código (si la cámara en vivo falla)
       <input type="file" accept="image/*" capture="environment" class="hidden" onchange="decodeFoto(this)"></label>
@@ -870,7 +881,7 @@ function confirmarMov() {
   d[0] === '@' ? mov({ ...b, a: '', tipo: 'baja', nota: d.slice(1) }) : mov({ ...b, a: d, tipo: 'mov', nota: '' });
   cerrar('m-mov');
 }
-const txtMov = x => ({ alta: 'Alta en ' + (LOCS[x.a] || x.a), mov: 'Movido de ' + (LOCS[x.de] || x.de) + ' a ' + (LOCS[x.a] || x.a), baja: (x.nota === 'tirado' ? 'Tirado' : 'Consumido') + ' desde ' + (LOCS[x.de] || x.de), anula: 'Anulación' }[x.tipo] || x.tipo) + ' (' + fmtC(x) + ')';
+const txtMov = x => ({ alta: 'Alta en ' + (LOCS[x.a] || x.a), mov: 'Movido de ' + (LOCS[x.de] || x.de) + ' a ' + (LOCS[x.a] || x.a), baja: (x.nota === 'tirado' ? 'Tirado' : /^cocinado/.test(x.nota || '') ? 'Gastado al cocinar «' + String(x.nota).slice(9) + '»' : 'Consumido') + ' desde ' + (LOCS[x.de] || x.de), anula: 'Anulación' }[x.tipo] || x.tipo) + ' (' + fmtC(x) + ')';
 function verHist(i) {
   const s = VIS[i], an = new Set(MOVS.filter(x => x.tipo === 'anula').map(x => x.ref));
   $('m-tit').textContent = 'Historial · ' + s.prod;
@@ -1097,7 +1108,7 @@ function calcSug() {
   MOVS.forEach(x => {
     const k = sinAc(x.prod), e = m[k] = m[k] || { prod: x.prod, altas: 0, cons: 0, lastAlta: 0, ud: x.ud };
     if (x.tipo === 'alta') { e.altas++; e.lastAlta = Math.max(e.lastAlta, x.t); }
-    if (x.tipo === 'baja' && x.nota === 'consumido') e.cons++;
+    if (x.tipo === 'baja' && (x.nota === 'consumido' || /^cocinado/.test(x.nota || ''))) e.cons++;
   });
   STOCK.forEach(s => { const k = sinAc(s.prod); tot[k] = (tot[k] || 0) + s.cant; });
   const lista = COMPRA.filter(c => !c.hecho).map(c => sinAc(c.n));
@@ -1541,6 +1552,61 @@ function pintaHero() {
 const _sc2 = selectorChef; selectorChef = function () { _sc2(); pintaHero(); };
 const _om2 = window.onMovs; window.onMovs = (l, c) => { _om2(l, c); pintaHero(); };
 pintaHero();
+</script>
+<script>
+/* ===== v4.1: descontar al cocinar y baja por código de barras ===== */
+let CKD = [], SCAN_MODO = 'alta';
+const ordLoc = l => l === 'frigo' ? 0 : l === 'despensa' ? 1 : 2;
+const denom = u => (u === 'kg' || u === 'l') ? 1000 : 1;
+function planDescuento(g, f) {
+  const L = stockDe(g.n).filter(s => !['limpieza', 'mascotas'].includes(s.loc)).sort((a, b) => (a.cad || '9999').localeCompare(b.cad || '9999') || ordLoc(a.loc) - ordLoc(b.loc));
+  if (!L.length) return { g, sin: true, items: [], on: false };
+  if (g.c == null || !g.u) return { g, manual: true, L, sel: 0, q: '', on: false };
+  const nb = aBase(g.c * f, g.u); let falta = nb.v, comp = false; const items = [];
+  L.forEach(s => { const b = aBase(s.cant, s.ud); if (b.u !== nb.u) return; comp = true; if (falta <= 0) return; const usar = Math.min(falta, b.v); items.push({ s, cant: usar / denom(s.ud), txt: fmtQ(usar, nb.u) }); falta -= usar; });
+  if (!comp) return { g, manual: true, L, sel: 0, q: '', on: false };
+  return { g, items, falta: Math.max(0, falta), u: nb.u, on: true };
+}
+function cocinadoAbrir() {
+  const f = VS.rac / (+VR.rac || 2);
+  CKD = (VR.i || []).map(normIng).filter(g => g.n && !BASICOS.test(sinAc(g.n))).map(g => planDescuento(g, f));
+  $('cd-tit').textContent = VR.n + ', ' + VS.rac + ' raciones. Revisa lo que se descontará del inventario.';
+  $('cd-sobloc').innerHTML = optsLoc(); $('cd-sobloc').value = 'frigo'; $('cd-sob').value = 0; pintaCD(); abrir('m-cocinado');
+}
+function pintaCD() {
+  $('cd-body').innerHTML = CKD.map((r, i) => {
+    let d;
+    if (r.sin) d = '<span class="text-slate-400">No lo tienes en el inventario: no se descuenta.</span>';
+    else if (r.manual) d = `<span class="text-amber-700">No puedo comparar unidades. Elige de dónde y cuánto restar:</span><div class="grid grid-cols-3 gap-1 mt-1"><select onchange="CKD[${i}].sel=+this.value" class="col-span-2 p-1.5 border rounded bg-white text-xs">${r.L.map((s, j) => `<option value="${j}">${esc(s.prod + ' en ' + LOCS[s.loc] + ' (' + fmtC(s) + ')')}</option>`).join('')}</select><input type="number" step="any" min="0" placeholder="cantidad" oninput="CKD[${i}].q=+this.value;CKD[${i}].on=+this.value>0;this.closest('label').querySelector('input[type=checkbox]').checked=CKD[${i}].on" class="p-1.5 border rounded bg-white text-xs"></div>`;
+    else d = r.items.map(x => `<span class="text-emerald-700">${esc(x.txt)} de ${esc(x.s.prod)} (${esc(LOCS[x.s.loc])})</span>`).join('<br>') + (r.falta > 0 ? `<br><span class="text-red-700">Te faltaban ${esc(fmtQ(r.falta, r.u))}: no había suficiente.</span>` : '');
+    return `<label class="flex gap-2 items-start bg-slate-50 rounded-lg p-2"><input type="checkbox" ${r.on ? 'checked' : ''} ${r.sin ? 'disabled' : ''} onchange="CKD[${i}].on=this.checked" class="mt-1 w-5 h-5 accent-emerald-600"><span class="flex-1"><b>${esc(r.g.n)}</b><br>${d}</span></label>`;
+  }).join('') || '<p class="text-xs text-slate-500">Esta receta no tiene ingredientes estructurados que descontar.</p>';
+}
+function cocinadoOk() {
+  const nota = 'cocinado:' + VR.n; let n = 0;
+  const baja = (s, c) => { if (!(c > 0)) return; mov({ prod: s.prod, cod: s.cod || '', cant: Math.min(c, s.cant), ud: s.ud, cad: s.cad || '', fmt: s.fmt || '', img: s.img || '', ns: s.ns || '', de: s.loc, a: '', tipo: 'baja', nota }); n++; };
+  CKD.filter(r => r.on).forEach(r => { if (r.manual) baja(r.L[r.sel], r.q); else r.items.forEach(x => baja(x.s, x.cant)); });
+  const sob = +$('cd-sob').value;
+  if (sob > 0) mov({ prod: VR.n + ' (cocinado)', cod: '', cant: sob, ud: 'rac', cad: '', fmt: '', img: '', ns: '', de: '', a: $('cd-sobloc').value, tipo: 'alta', nota });
+  cerrar('m-cocinado'); cerrar('m-receta');
+  alert(n + ' producto(s) descontados' + (sob > 0 ? ' y ' + sob + ' ración(es) guardadas en ' + LOCS[$('cd-sobloc').value] : '') + '.');
+}
+const _pr3 = pintaReceta;
+pintaReceta = function () { _pr3(); $('m-acc').insertAdjacentHTML('afterbegin', '<button onclick="cocinadoAbrir()" class="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold text-sm">✅ ¡Ya la he cocinado! Descontar del inventario</button>'); };
+
+/* Baja por código de barras */
+function scanModo(m) { SCAN_MODO = m; $('sm-alta').className = 'py-2 rounded-lg text-xs font-bold ' + (m === 'alta' ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-600'); $('sm-baja').className = 'py-2 rounded-lg text-xs font-bold ' + (m === 'baja' ? 'bg-red-600 text-white' : 'bg-slate-100 text-slate-600'); }
+const _as = abrirScanner; abrirScanner = function () { scanModo('alta'); return _as(); };
+const _pc = procesarCodigo;
+procesarCodigo = async function (raw) {
+  if (SCAN_MODO !== 'baja') return _pc(raw);
+  const code = String(raw || '').replace(/\D/g, ''); if (code.length < 8) return msg('Código no válido (mínimo 8 dígitos).');
+  pararCamara(); cerrar('m-scan');
+  const L = STOCK.filter(s => s.cod === code).sort((a, b) => (a.cad || '9999').localeCompare(b.cad || '9999') || ordLoc(a.loc) - ordLoc(b.loc));
+  if (!L.length) { alert('No hay ningún producto con ese código en el inventario. Los añadidos a mano no llevan código: búscalo por nombre.'); return abrirBus(); }
+  VIS = [L[0]]; abrirMov(0, 'baja'); if (['ud', 'rac'].includes(L[0].ud)) $('mv-cant').value = Math.min(1, L[0].cant);
+};
+scanModo('alta');
 </script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
