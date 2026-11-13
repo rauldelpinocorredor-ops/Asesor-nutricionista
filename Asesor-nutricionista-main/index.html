@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="referrer" content="no-referrer">
+<script>try { if (window.top !== window.self) window.top.location = window.self.location; } catch (e) { document.documentElement.innerHTML = ""; }</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1B2E2B">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:wght@600;800&display=swap">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="AsesorNutri">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Asesor Nutricionista</title>
+<script>
+  window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+</script>
+<script defer src="/_vercel/insights/script.js"></script>
+<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<script>
+tailwind.config = { theme: { extend: {
+  fontFamily: { sans: ['"Atkinson Hyperlegible"', 'system-ui', 'sans-serif'], display: ['"Bricolage Grotesque"', 'system-ui', 'sans-serif'] },
+  colors: {
+    emerald: { 50: '#EEF7F1', 100: '#DFF1E6', 200: '#BFE3CF', 600: '#1F7A4D', 700: '#17623D', 800: '#124D31' },
+    slate: { 50: '#F3F5F0', 100: '#E8ECE5', 200: '#D6DCD2', 300: '#B9C2B5', 400: '#6F7C70', 500: '#566359', 600: '#3F4C45', 700: '#2C3A35', 800: '#1F2F2B', 900: '#1B2E2B' },
+    amber: { 50: '#FDF6E3', 100: '#FBEFD4', 200: '#F2D9A1', 600: '#B7791F', 700: '#8A5A12', 800: '#6B450D', 900: '#5A3A0B' },
+    sky: { 50: '#EAF3FA', 200: '#BFDBF0', 600: '#2C79B5', 800: '#1D5885' },
+    red: { 50: '#FCEEEB', 200: '#F3C1B8', 500: '#D9533F', 600: '#C93B2B', 700: '#A62F21' },
+    rose: { 600: '#C93B2B', 700: '#A62F21' },
+    indigo: { 600: '#7A2E5F' }
+  } } } };
+</script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="assets/css/global.css">
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans">
+
+<header class="bg-emerald-600 text-white p-4 shadow-md sticky top-0 z-40 flex justify-between items-center">
+  <div class="flex items-center gap-3"><button id="home-back" onclick="tab('home')" class="hidden w-10 h-10 rounded-full bg-white/15 items-center justify-center" aria-label="Volver al inicio" title="Volver al inicio"><i class="fa-solid fa-house"></i></button><h1 class="text-lg font-bold"><i class="fa-solid fa-utensils mr-2"></i>Asesor Nutricionista</h1></div>
+  <span class="text-xs bg-emerald-700 px-3 py-1 rounded-full">Familiar</span>
+</header>
+
+<main class="max-w-3xl mx-auto p-4">
+
+<!-- HOME -->
+<section id="s-home" class="tab active">
+  <div class="home-wrap">
+    <div class="home-grid">
+      <button onclick="tab('despensa')" class="home-card"><i class="fa-solid fa-basket-shopping"></i><span>Despensa</span></button>
+      <button onclick="tab('chef')" class="home-card"><i class="fa-solid fa-kitchen-set"></i><span>Chef</span></button>
+      <button onclick="tab('nutri')" class="home-card"><i class="fa-solid fa-apple-whole"></i><span>Nutrición</span></button>
+      <button onclick="tab('training')" class="home-card"><i class="fa-solid fa-dumbbell"></i><span>Training</span></button>
+    </div>
+  </div>
+</section>
+
+<!-- DESPENSA -->
+<section id="s-despensa" class="tab">
+  <div class="bg-white rounded-2xl shadow-sm p-4 mb-4 border">
+    <div class="flex justify-between items-center mb-1">
+      <h2 class="font-bold text-slate-700"><i class="fa-solid fa-boxes-stacked text-emerald-600 mr-2"></i>Despensa y hogar</h2>
+      <div class="flex gap-2"><button onclick="abrirAlta()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-bold"><i class="fa-solid fa-plus mr-1"></i>Añadir</button><button onclick="abrirBus()" class="bg-sky-600 text-white px-4 py-2 rounded-lg text-sm font-medium"><i class="fa-solid fa-magnifying-glass mr-1"></i>Buscar</button></div>
+    </div>
+    <p id="sync-estado" class="text-[11px] text-slate-400 mb-2"></p>
+    <div id="avisos" class="mb-3"></div>
+    <div id="subtabs" class="location-picker mb-4"></div>
+    <div id="compra-form" class="hidden mb-3 space-y-2">
+      <div class="flex gap-2"><input id="c-n" placeholder="Producto a comprar…" class="flex-1 p-2 border rounded-lg"><button onclick="addCompra()" class="bg-emerald-600 text-white px-4 rounded-lg font-bold">+</button></div>
+      <button onclick="compraSel()" class="w-full bg-emerald-600 text-white py-2 rounded-lg text-xs font-bold"><i class="fa-solid fa-basket-shopping mr-1"></i>Pasar lo marcado como comprado al inventario</button>
+      <div class="grid grid-cols-2 gap-2"><button onclick="compartir()" class="bg-slate-800 text-white py-2 rounded-lg text-xs font-bold"><i class="fa-solid fa-share-nodes mr-1"></i>Compartir / copiar</button><button onclick="waLista()" class="bg-green-600 text-white py-2 rounded-lg text-xs font-bold"><i class="fa-brands fa-whatsapp mr-1"></i>WhatsApp</button></div>
+    </div>
+    <div id="lista" class="space-y-2"></div>
+  </div>
+  <div id="m-add" class="fixed inset-0 bg-black/50 hidden z-50 items-end sm:items-center justify-center p-3">
+    <div class="bg-white rounded-t-2xl sm:rounded-2xl max-w-lg w-full p-5 max-h-[92vh] overflow-y-auto">
+      <div class="flex justify-between items-center mb-3"><h3 class="font-bold text-lg">Añadir alimento</h3><button onclick="cerrar('m-add')" class="text-slate-400 text-2xl" aria-label="Cerrar"><i class="fa-solid fa-xmark"></i></button></div>
+      <div class="grid grid-cols-2 gap-2 mb-4"><button onclick="cerrar('m-add');abrirScanner()" class="bg-slate-800 text-white p-3 rounded-xl text-sm font-bold"><i class="fa-solid fa-barcode mr-1"></i>Escanear código</button><button onclick="cerrar('m-add');abrir('m-tk')" class="bg-indigo-600 text-white p-3 rounded-xl text-sm font-bold"><i class="fa-solid fa-receipt mr-1"></i>Leer ticket</button></div>
+      <div id="alta" class="bg-slate-50 p-3 rounded-xl grid grid-cols-2 gap-2">
+        <p class="col-span-2 text-sm font-bold text-slate-700">Añadir manualmente</p>
+        <input id="p-nombre" placeholder="Producto…" class="col-span-2 p-2 border rounded-lg bg-white">
+        <input id="p-cant" type="number" step="any" min="0" value="1" class="p-2 border rounded-lg bg-white">
+        <select id="p-ud" class="p-2 border rounded-lg bg-white"><option value="ud">unidades</option><option value="rac">raciones</option><option value="kg">kg</option><option value="l">litros</option></select>
+        <select id="p-cat" class="col-span-2 p-2 border rounded-lg bg-white"></select>
+        <input type="date" id="p-cad" class="col-span-2 p-2 border rounded-lg bg-white">
+        <button onclick="altaManual()" class="col-span-2 bg-emerald-600 text-white p-2 rounded-lg text-sm font-bold">Guardar en la ubicación seleccionada</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CHEF -->
+<section id="s-chef" class="tab">
+  <div class="bg-white rounded-2xl shadow-sm p-4 border">
+    <div class="flex justify-between items-center mb-1">
+      <h2 class="font-bold text-slate-700"><i class="fa-solid fa-kitchen-set text-emerald-600 mr-2"></i>Chef familiar</h2>
+      <button onclick="formReceta()" class="text-xs bg-slate-800 text-white px-3 py-2 rounded-lg font-medium">+ Mi receta</button>
+    </div>
+    <p class="text-xs text-slate-500 mb-3">Elige ingredientes de tu despensa (2 o más para buscar en mis recetas; 1 o más para preguntar a una IA):</p>
+    <div id="chef-hero" class="hero mb-4"><p class="hero-t">¿Qué cocinamos hoy?</p><p id="hero-s" class="text-sm opacity-90"></p></div>
+    <div id="sem-box" class="mb-3"></div>
+    <div id="dan-box" class="mb-3"></div>
+    <input id="ch-q" oninput="buscaReceta()" placeholder="Buscar receta por nombre…" class="w-full p-2 border rounded-lg text-sm mb-3">
+    <details id="chef-det" class="mb-4 bg-slate-50 rounded-xl">
+      <summary class="p-3 text-sm font-bold text-slate-700 cursor-pointer select-none">Ingredientes de tu despensa <span id="chef-n" class="text-emerald-700 font-normal"></span></summary>
+      <div class="px-3 pb-3"><div id="chef-sel" class="flex flex-wrap gap-2 min-h-[40px]"></div><button onclick="limpiaSel()" class="text-xs underline text-slate-500 mt-2">Quitar la selección</button></div>
+    </details>
+    <div class="grid grid-cols-2 gap-2 mb-2">
+      <button onclick="buscarRecetas()" class="bg-emerald-600 text-white py-2.5 rounded-xl font-medium text-sm">Buscar recetas</button>
+      <button onclick="abrirIA()" class="bg-indigo-600 text-white py-2.5 rounded-xl font-medium text-sm"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i>Preguntar a una IA</button>
+    </div>
+    <button onclick="salvavidas()" class="w-full bg-rose-600 text-white py-2.5 rounded-xl font-medium text-sm mb-2">🛟 Menú Salvavidas: 5 recetas para lo que caduca pronto</button>
+    <button onclick="buscarRecetas(true)" class="w-full text-xs text-slate-500 underline mb-3">Ver todas las recetas</button>
+    <button onclick="verFavs()" class="w-full text-xs text-slate-500 underline mb-3">♥ Mis favoritas</button>
+    <button onclick="abrir('m-lote')" class="w-full text-xs text-indigo-600 underline mb-3">Añadir muchas recetas con IA (importación en lote)</button>
+    <div id="chef-res" class="space-y-2"></div>
+  </div>
+</section>
+
+<!-- NUTRICIONISTA -->
+<section id="s-nutri" class="tab">
+  <div class="bg-white rounded-2xl shadow-sm p-4 border">
+    <h2 class="font-bold text-slate-700 mb-3"><i class="fa-solid fa-apple-whole text-emerald-600 mr-2"></i>Menús</h2>
+    <div class="flex gap-2 border-b pb-3 mb-4">
+      <button id="nb-adultos" onclick="subNutri('adultos')" class="px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm font-medium">Familiar</button>
+      <button id="nb-bebe" onclick="subNutri('bebe')" class="px-4 py-2 rounded-lg bg-slate-100 text-slate-600 text-sm font-medium">Bebé y escuela</button>
+    </div>
+    <div id="np-adultos">
+      <div class="grid grid-cols-3 gap-2 mb-3 text-xs font-bold text-slate-600">
+        <label>Comensales<input type="number" id="n-pers" value="2" min="1" max="8" class="w-full p-2 border rounded-lg mt-1 text-sm font-normal"></label>
+        <label>Duración<select id="n-dias" class="w-full p-2 border rounded-lg mt-1 text-sm font-normal"><option value="7">Semanal</option><option value="14">Quincenal</option></select></label>
+        <label>Kcal/día<input type="number" id="n-kcal" value="2000" min="1200" max="4000" class="w-full p-2 border rounded-lg mt-1 text-sm font-normal"></label>
+      </div>
+      <div id="n-comidas-selector" class="bg-slate-50 rounded-xl p-3 mb-3">
+        <p class="text-xs font-bold text-slate-600 mb-2">Comidas que incluirá el menú</p>
+        <div class="grid grid-cols-2 gap-2 text-xs">
+          <label><input type="checkbox" class="n-meal accent-emerald-600" value="desayuno"> Desayuno</label>
+          <label><input type="checkbox" class="n-meal accent-emerald-600" value="almuerzo"> Almuerzo</label>
+          <label><input type="checkbox" class="n-meal accent-emerald-600" value="comida" checked> Comida</label>
+          <label><input type="checkbox" class="n-meal accent-emerald-600" value="merienda"> Merienda</label>
+          <label><input type="checkbox" class="n-meal accent-emerald-600" value="cena" checked> Cena</label>
+        </div>
+      </div>
+      <button onclick="menuAdultos()" class="w-full bg-emerald-600 text-white py-2 rounded-xl text-sm font-medium mb-3">Generar menú y cantidades</button>
+      <div id="n-guardados" class="mb-3"></div>
+      <div id="n-res" class="space-y-2"></div>
+      <p class="text-[11px] text-slate-400 mt-3">Orientativo, no sustituye a un dietista-nutricionista. Cantidades en crudo por persona, escaladas de forma aproximada según las kcal indicadas.</p>
+    </div>
+    <div id="np-bebe" class="hidden">
+      <div class="bg-sky-50 border border-sky-200 rounded-xl p-3 mb-4">
+        <p class="font-bold text-sky-800 text-sm mb-1"><i class="fa-solid fa-school mr-1"></i>Menú del cole</p>
+        <label class="block text-center bg-sky-600 text-white rounded-lg py-2 font-bold text-xs mb-2"><i class="fa-solid fa-file-pdf mr-1"></i>Subir PDF del mes<input type="file" accept="application/pdf" class="hidden" onchange="colePDF(this)"></label>
+        <p id="co-est" class="text-[11px] text-slate-500 mb-2"></p>
+        <div id="co-prev"></div>
+        <details class="mb-2"><summary class="text-xs underline text-slate-600 cursor-pointer">Añadir un día a mano</summary>
+          <input type="date" id="co-f" class="w-full p-2 border rounded-lg mt-2 text-sm"><textarea id="co-t" rows="4" placeholder="Un plato por línea" class="w-full p-2 border rounded-lg mt-1 text-sm"></textarea>
+          <button onclick="coleManual()" class="w-full bg-slate-700 text-white py-2 rounded-lg text-xs font-bold mt-1">Guardar día</button></details>
+        <div id="co-lista"></div>
+        <p class="text-[10px] text-slate-400">La cena sugerida sigue las pautas que trae el propio PDF del cole (método del espejo).</p>
+      </div>
+      <p class="text-xs text-slate-500 mb-3">Marca qué comidas hace el bebé en casa (la comida del cole se supone cubierta por la escuela):</p>
+      <div class="space-y-3 bg-slate-50 p-4 rounded-xl text-sm">
+        <label class="flex justify-between">Desayuno en casa<input type="checkbox" id="b-des" checked class="accent-emerald-600 w-5 h-5"></label>
+        <label class="flex justify-between">Merienda en casa<input type="checkbox" id="b-mer" checked class="accent-emerald-600 w-5 h-5"></label>
+        <label class="flex justify-between">Cena en casa<input type="checkbox" id="b-cen" checked class="accent-emerald-600 w-5 h-5"></label>
+      </div>
+      <button onclick="menuBebe()" class="w-full bg-emerald-600 text-white py-2 rounded-xl text-sm font-medium mt-4">Actualizar menú del bebé</button>
+      <div id="b-guardados" class="mb-3"></div>
+      <div id="b-res" class="mt-4 space-y-2"></div>
+      <p class="text-[11px] text-slate-400 mt-3">Ideas generales. Consulta con su pediatra la introducción de alimentos y alergias.</p>
+    </div>
+  </div>
+</section>
+
+<!-- TRAINING -->
+<section id="s-training" class="tab">
+  <div class="bg-white rounded-2xl shadow-sm p-4 border">
+    <h2 class="font-bold text-slate-700 mb-3"><i class="fa-solid fa-dumbbell text-emerald-600 mr-2"></i>Training y deportes</h2>
+    <div class="mb-4 bg-slate-50 p-3 rounded-xl">
+      <p class="text-xs font-bold text-slate-600 mb-2">Material disponible:</p>
+      <div id="material" class="grid grid-cols-2 gap-2 text-xs"></div>
+    </div>
+    <div class="grid grid-cols-3 gap-2 mb-4">
+      <button onclick="rutina(15)" class="bg-slate-100 p-2 rounded-xl text-xs font-bold">15 min</button>
+      <button onclick="rutina(30)" class="bg-slate-100 p-2 rounded-xl text-xs font-bold">30 min</button>
+      <button onclick="rutina(45)" class="bg-slate-100 p-2 rounded-xl text-xs font-bold">45 min</button>
+    </div>
+    <div id="rutina" class="bg-emerald-50 p-4 rounded-xl mb-5 text-sm text-emerald-900">Elige una duración.</div>
+    <div class="border-t pt-4">
+      <h3 class="font-bold text-slate-700 text-sm mb-2">Registrar otro deporte</h3>
+      <div class="grid grid-cols-3 gap-2 mb-2">
+        <select id="d-tipo" class="p-2 border rounded-lg bg-white text-sm"><option>Pádel</option><option>Running</option><option>Natación</option><option>Ciclismo</option><option>Yoga</option></select>
+        <input type="number" id="d-min" placeholder="Min" class="p-2 border rounded-lg text-sm">
+        <button onclick="addDeporte()" class="bg-slate-700 text-white p-2 rounded-lg text-sm">Añadir</button>
+      </div>
+      <div id="d-lista" class="space-y-1 text-xs text-slate-600"></div>
+    </div>
+  </div>
+</section>
+</main>
+
+<nav class="fixed bottom-0 inset-x-0 bg-white border-t py-2 px-4 flex justify-around shadow-lg z-40">
+  <button onclick="tab('despensa')" id="n-despensa" class="flex flex-col items-center text-emerald-600"><i class="fa-solid fa-basket-shopping text-lg"></i><span class="text-[10px] font-bold">Despensa</span></button>
+  <button onclick="tab('chef')" id="n-chef" class="flex flex-col items-center text-slate-400"><i class="fa-solid fa-kitchen-set text-lg"></i><span class="text-[10px] font-bold">Chef</span></button>
+  <button onclick="tab('nutri')" id="n-nutri" class="flex flex-col items-center text-slate-400"><i class="fa-solid fa-apple-whole text-lg"></i><span class="text-[10px] font-bold">Nutrición</span></button>
+  <button onclick="tab('training')" id="n-training" class="flex flex-col items-center text-slate-400"><i class="fa-solid fa-dumbbell text-lg"></i><span class="text-[10px] font-bold">Training</span></button>
+</nav>
+
+<!-- Login -->
+<div id="m-login" class="fixed inset-0 bg-white z-[70] flex items-center justify-center p-6">
+  <div class="w-full max-w-sm">
+    <h2 class="text-xl font-bold text-emerald-700 mb-4"><i class="fa-solid fa-utensils mr-2"></i>Asesor Nutricionista</h2>
+    <input id="l-e" type="email" placeholder="Correo" autocomplete="username" class="w-full p-3 border rounded-lg mb-2">
+    <input id="l-p" type="password" placeholder="Contraseña" autocomplete="current-password" class="w-full p-3 border rounded-lg mb-2">
+    <button onclick="entrar()" class="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold">Entrar</button>
+    <p id="l-err" class="text-xs text-red-600 mt-2"></p>
+  </div>
+</div>
+
+<!-- Mover / dar de baja -->
+<div id="m-mov" class="fixed inset-0 bg-black/50 hidden z-50 items-end sm:items-center justify-center">
+  <div class="bg-white rounded-t-2xl sm:rounded-2xl max-w-sm w-full p-5">
+    <h3 id="mv-tit" class="font-bold"></h3><p id="mv-inf" class="text-xs text-slate-500 mb-3"></p>
+    <label class="text-xs font-bold">Cantidad<input id="mv-cant" type="number" step="any" class="w-full p-2 border rounded-lg mt-1 mb-2 font-normal"></label>
+    <label class="text-xs font-bold">Destino<select id="mv-dest" class="w-full p-2 border rounded-lg mt-1 mb-3 bg-white font-normal"></select></label>
+    <div class="flex gap-2"><button onclick="cerrar('m-mov')" class="px-4 bg-slate-100 rounded-xl text-sm">Cancelar</button><button onclick="confirmarMov()" class="flex-1 bg-emerald-600 text-white py-2.5 rounded-xl font-bold">Confirmar</button></div>
+  </div>
+</div>
+
+<!-- Temporizadores -->
+<div id="timers" class="fixed left-0 right-0 z-[60] px-3 space-y-1" style="bottom:calc(6.2rem + env(safe-area-inset-bottom))"></div>
+
+<!-- Modal receta -->
+<div id="m-receta" class="fixed inset-0 bg-black/50 hidden z-50 items-end sm:items-center justify-center">
+  <div class="bg-white rounded-t-2xl sm:rounded-2xl max-w-lg w-full p-5 max-h-[90vh] overflow-y-auto">
+    <div class="flex justify-between mb-2"><h3 id="m-tit" class="font-bold text-lg"></h3><button onclick="cerrar('m-receta')" class="text-slate-400 text-xl"><i class="fa-solid fa-xmark"></i></button></div>
+    <div id="m-cuerpo" class="text-sm text-slate-600 space-y-1"></div>
+    <div id="m-acc" class="flex gap-2 mt-4 mb-16"></div>
+  </div>
+</div>
+
+<!-- Modal formulario receta -->
+<div id="m-form" class="fixed inset-0 bg-black/50 hidden z-50 items-end sm:items-center justify-center">
+  <div class="bg-white rounded-t-2xl sm:rounded-2xl max-w-lg w-full p-5 max-h-[92vh] overflow-y-auto">
+    <div class="flex justify-between mb-2"><h3 class="font-bold">Mi receta</h3><button onclick="cerrar('m-form')" class="text-slate-400 text-xl"><i class="fa-solid fa-xmark"></i></button></div>
+    <input id="rf-n" placeholder="Nombre de la receta" class="w-full p-2 border rounded-lg text-sm mb-2">
+    <textarea id="rf-i" rows="4" placeholder="Ingredientes (uno por línea)&#10;200 g de arroz&#10;1 cebolla" class="w-full p-2 border rounded-lg text-sm mb-2"></textarea>
+    <textarea id="rf-p" rows="6" placeholder="Pasos (uno por línea)&#10;Sofríe la cebolla 5 min&#10;Añade el arroz y cuece 18 min" class="w-full p-2 border rounded-lg text-sm mb-1"></textarea>
+    <p class="text-[11px] text-slate-400 mb-3">Si un paso incluye un tiempo (por ejemplo «10 min» o «3-4 minutos»), aparecerá un botón de temporizador.</p>
+    <button onclick="guardarForm()" class="w-full bg-emerald-600 text-white py-2.5 rounded-xl font-bold text-sm">Guardar receta</button>
+  </div>
+</div>
+
+<!-- Modal planificar descongelación -->
+<div id="m-plan" class="fixed inset-0 bg-black/50 hidden z-50 items-end sm:items-center justify-center">
+  <div class="bg-white rounded-t-2xl sm:rounded-2xl max-w-sm w-full p-5">
+    <h3 id="pl-tit" class="font-bold"></h3><p id="pl-inf" class="text-xs text-slate-500 mb-3"></p>
+    <label class="text-xs font-bold">¿Qué día lo vas a comer?<input type="date" id="pl-fecha" class="w-full p-2 border rounded-lg mt-1 mb-2 font-normal"></label>
+    <label class="text-xs font-bold">Cantidad<input type="number" id="pl-cant" step="any" class="w-full p-2 border rounded-lg mt-1 mb-3 font-normal"></label>
+    <p class="text-[11px] text-slate-400 mb-3">La app te avisará la víspera (al abrirla) para pasarlo al frigorífico.</p>
+    <div class="flex gap-2"><button onclick="cerrar('m-plan')" class="px-4 bg-slate-100 rounded-xl text-sm">Cancelar</button><button onclick="guardarPlan()" class="flex-1 bg-sky-600 text-white py-2.5 rounded-xl font-bold">Planificar</button></div>
+  </div>
+</div>
+
+<!-- Modal buscar alimento -->
+<div id="m-bus" class="fixed inset-0 bg-black/50 hidden z-50 items-end sm:items-center justify-center"><div class="bg-white rounded-t-2xl sm:rounded-2xl max-w-md w-full p-4 max-h-[85vh] overflow-y-auto">
+  <div class="flex justify-between mb-2"><h3 class="font-bold">Buscar alimento</h3><button onclick="cerrar('m-bus')" class="text-slate-400 text-xl"><i class="fa-solid fa-xmark"></i></button></div>
+  <input id="bus-q" oninput="busca()" placeholder="Nombre del alimento…" class="w-full p-2 border rounded-lg mb-3"><div id="bus-res" class="space-y-2"></div></div></div>
+
+<!-- Modal compra seleccionada -->
+<div id="m-cs" class="fixed inset-0 bg-black/50 hidden z-50 items-end sm:items-center justify-center"><div class="bg-white rounded-t-2xl sm:rounded-2xl max-w-sm w-full p-5">
+  <p id="cs-pos" class="text-[11px] text-slate-400"></p><h3 id="cs-tit" class="font-bold mb-3"></h3>
+  <label class="text-xs font-bold">Ubicación<select id="cs-loc" class="w-full p-2 border rounded-lg mt-1 mb-2 bg-white font-normal"></select></label>
+  <div class="grid grid-cols-2 gap-2 mb-2 text-xs font-bold"><label>Cantidad<input id="cs-cant" type="number" step="any" value="1" class="w-full p-2 border rounded-lg mt-1 font-normal"></label>
+  <label>Unidad<select id="cs-ud" class="w-full p-2 border rounded-lg mt-1 bg-white font-normal"><option value="ud">unidades</option><option value="rac">raciones</option><option value="kg">kg</option><option value="l">litros</option></select></label></div>
+  <label class="text-xs font-bold">Caducidad (opcional)<input type="date" id="cs-cad" class="w-full p-2 border rounded-lg mt-1 mb-3 font-normal"></label>
+  <div class="flex gap-2"><button onclick="cerrar('m-cs');CSQ=[]" class="px-3 bg-slate-100 rounded-xl text-sm">Parar</button><button onclick="csNext()" class="px-3 bg-slate-100 rounded-xl text-sm">Saltar</button><button onclick="csOk()" class="flex-1 bg-emerald-600 text-white py-2.5 rounded-xl font-bold">Añadir</button></div></div></div>
+
+<!-- Modal plato sin receta -->
+<div id="m-plato" class="fixed inset-0 bg-black/50 hidden z-50 items-end sm:items-center justify-center"><div class="bg-white rounded-t-2xl sm:rounded-2xl max-w-sm w-full p-5">
+  <p id="pt-tit" class="font-bold mb-3"></p><div class="grid gap-2"><button onclick="ptCrear()" class="bg-slate-800 text-white py-2 rounded-xl text-sm font-bold">Escribir la receta yo</button><button onclick="ptIA()" class="bg-indigo-600 text-white py-2 rounded-xl text-sm font-bold">Pedirla a una IA</button><button onclick="cerrar('m-plato')" class="bg-slate-100 py-2 rounded-xl text-sm">Cerrar</button></div></div></div>
+
+<!-- Cocinado: descontar del inventario -->
+<div id="m-cocinado" class="fixed inset-0 bg-black/50 hidden z-50 items-end sm:items-center justify-center">
+  <div class="bg-white rounded-t-2xl sm:rounded-2xl max-w-lg w-full p-4 max-h-[94vh] overflow-y-auto text-sm">
+    <div class="flex justify-between mb-1"><h3 class="font-bold">Descontar lo cocinado</h3><button onclick="cerrar('m-cocinado')" class="text-slate-400 text-xl"><i class="fa-solid fa-xmark"></i></button></div>
+    <p id="cd-tit" class="text-xs text-slate-500 mb-2"></p><div id="cd-body" class="space-y-2 mb-3"></div>
+    <div class="bg-slate-50 rounded-xl p-3 mb-3"><p class="text-xs font-bold mb-1">¿Han sobrado raciones?</p><div class="grid grid-cols-2 gap-2"><input id="cd-sob" type="number" min="0" step="1" value="0" class="p-2 border rounded-lg bg-white"><select id="cd-sobloc" class="p-2 border rounded-lg bg-white"></select></div></div>
+    <button onclick="cocinadoOk()" class="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold">Confirmar y descontar</button>
+  </div>
+</div>
+
+<!-- Modo cocina -->
+<div id="m-ck" class="fixed inset-0 z-[80] bg-slate-900 text-white hidden flex-col p-5">
+  <div class="flex justify-between items-center mb-3"><p id="ck-t" class="font-bold truncate"></p><button onclick="cocinaCerrar()" class="text-3xl px-2">✕</button></div>
+  <div id="ck-body" class="flex-1 overflow-y-auto"></div><div id="ck-tm" class="mt-3"></div>
+  <div class="grid grid-cols-2 gap-3 mt-3"><button onclick="ckMov(-1)" class="bg-slate-700 rounded-2xl py-6 text-2xl font-bold">◀ Atrás</button><button onclick="ckMov(1)" class="bg-white text-slate-900 rounded-2xl py-6 text-2xl font-bold">Siguiente ▶</button></div>
+</div>
+
+<!-- Modal ticket -->
+<div id="m-tk" class="fixed inset-0 bg-black/50 hidden z-50 items-end sm:items-center justify-center">
+  <div class="bg-white rounded-t-2xl sm:rounded-2xl max-w-lg w-full p-4 max-h-[94vh] overflow-y-auto text-sm">
+    <div class="flex justify-between mb-2"><h3 class="font-bold"><i class="fa-solid fa-receipt text-indigo-600 mr-1"></i>Alta por ticket</h3><button onclick="cerrar('m-tk')" class="text-slate-400 text-xl"><i class="fa-solid fa-xmark"></i></button></div>
+    <div class="grid grid-cols-2 gap-2 mb-2">
+      <label class="block text-center bg-slate-800 text-white rounded-lg py-2 font-bold text-xs"><i class="fa-solid fa-camera mr-1"></i>Hacer foto<input type="file" accept="image/*" capture="environment" class="hidden" onchange="tkFoto(this)"></label>
+      <label class="block text-center bg-slate-100 rounded-lg py-2 font-bold text-xs"><i class="fa-solid fa-image mr-1"></i>Elegir de la galería<input type="file" accept="image/*" class="hidden" onchange="tkFoto(this)"></label>
+    </div>
+    <p class="text-[11px] text-slate-400 mb-2">Ticket estirado, recto y con buena luz. La foto se lee en este móvil y no se sube a ningún sitio.</p>
+    <canvas id="tk-cv" class="w-full rounded-lg bg-slate-100 hidden mb-2"></canvas>
+    <div id="tk-btns" class="hidden grid grid-cols-2 gap-2 mb-2"><button onclick="tkGirar()" class="bg-slate-100 py-2 rounded-lg font-bold text-xs"><i class="fa-solid fa-rotate-right mr-1"></i>Girar</button><button onclick="tkLeer()" class="bg-indigo-600 text-white py-2 rounded-lg font-bold text-xs">Leer ticket</button></div>
+    <p id="tk-est" class="text-xs text-slate-500 mb-2"></p>
+    <div id="tk-lista"></div>
+    <div id="tk-conf" class="hidden">
+      <label class="text-xs font-bold text-slate-600">Caducidad común (opcional)<input type="date" id="tk-cad" class="w-full p-2 border rounded-lg mt-1 mb-2 font-normal"></label>
+      <p class="text-[11px] text-slate-400 mb-2">Desmarca las líneas que no quieras añadir. La ubicación es una sugerencia por palabras clave: cámbiala si no acierta.</p>
+      <button onclick="tkConfirmar()" class="w-full bg-emerald-600 text-white py-2.5 rounded-xl font-bold">Añadir seleccionados al inventario</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal lote -->
+<div id="m-lote" class="fixed inset-0 bg-black/50 hidden z-50 items-end sm:items-center justify-center">
+  <div class="bg-white rounded-t-2xl sm:rounded-2xl max-w-lg w-full p-5 max-h-[92vh] overflow-y-auto text-sm">
+    <div class="flex justify-between mb-2"><h3 class="font-bold">Importar recetas en lote</h3><button onclick="cerrar('m-lote')" class="text-slate-400 text-xl"><i class="fa-solid fa-xmark"></i></button></div>
+    <input id="lt-tema" placeholder="Tema (ej. cenas ligeras, legumbres, para niños…)" class="w-full p-2 border rounded-lg mb-2">
+    <div class="grid grid-cols-3 gap-2 mb-2 text-xs font-bold text-slate-600">
+      <label>Cantidad<input id="lt-n" type="number" value="8" min="3" max="15" class="w-full p-2 border rounded-lg mt-1 font-normal text-sm"></label>
+      <label>Dieta<select id="lt-d" class="w-full p-2 border rounded-lg mt-1 font-normal text-sm bg-white"><option value="">Cualquiera</option><option>mediterránea</option><option>internacional</option><option>vegetariana</option><option>vegana</option><option>sin gluten</option></select></label>
+      <label>Comida<select id="lt-t" class="w-full p-2 border rounded-lg mt-1 font-normal text-sm bg-white"><option value="">Cualquiera</option><option>desayuno</option><option>comida</option><option>cena</option><option>merienda</option><option>postre</option></select></label>
+    </div>
+    <button onclick="copiarLote()" class="w-full bg-slate-800 text-white py-2 rounded-lg font-bold text-xs mb-2">1. Copiar petición</button>
+    <textarea id="lt-resp" rows="4" placeholder="2. Pega aquí la respuesta de la IA" class="w-full p-2 border rounded-lg text-xs mb-2"></textarea>
+    <button onclick="importarLote()" class="w-full bg-emerald-600 text-white py-2 rounded-lg font-bold text-xs">3. Importar recetas</button>
+    <p id="lt-est" class="text-xs text-slate-500 mt-2"></p>
+    <p class="text-[11px] text-slate-400 mt-2">Las etiquetas de dieta y los alérgenos las pone la IA: revisa siempre los ingredientes. Las recetas importadas se sincronizan con el otro móvil.</p>
+  </div>
+</div>
+
+<!-- Modal IA -->
+<div id="m-ia" class="fixed inset-0 bg-black/50 hidden z-50 items-end sm:items-center justify-center">
+  <div class="bg-white rounded-t-2xl sm:rounded-2xl max-w-lg w-full p-5 max-h-[92vh] overflow-y-auto text-sm">
+    <div class="flex justify-between mb-2"><h3 class="font-bold"><i class="fa-solid fa-wand-magic-sparkles text-indigo-600 mr-1"></i>Receta con IA</h3><button onclick="cerrar('m-ia')" class="text-slate-400 text-xl"><i class="fa-solid fa-xmark"></i></button></div>
+    <p class="text-xs text-slate-500 mb-1">Ingredientes marcados:</p>
+    <p id="ia-res" class="text-xs bg-slate-50 rounded-lg p-2 mb-3"></p>
+    <div class="grid grid-cols-3 gap-2 mb-2 text-xs font-bold text-slate-600">
+      <label>Comensales<input type="number" id="ia-pers" value="2" min="1" max="12" class="w-full p-2 border rounded-lg mt-1 font-normal text-sm"></label>
+      <label class="col-span-2">Notas (opcional)<input id="ia-notas" placeholder="rápido, sin gluten…" class="w-full p-2 border rounded-lg mt-1 font-normal text-sm"></label>
+    </div>
+    <label class="flex items-center gap-2 text-xs mb-3"><input type="checkbox" id="ia-basic" checked class="accent-indigo-600">Permitir básicos de cocina (aceite, sal, agua, especias)</label>
+    <div class="border rounded-xl p-3 mb-2">
+      <p class="font-bold mb-1">Pide la receta a tu IA favorita</p>
+      <p class="text-[11px] text-slate-500 mb-2">Copia la petición, pégala en ChatGPT, Claude, Gemini u otra IA, y pega aquí la receta que te devuelva.</p>
+      <button onclick="copiarPrompt()" class="w-full bg-slate-800 text-white py-2 rounded-lg font-bold text-xs mb-2">Copiar petición</button>
+      <textarea id="ia-resp" rows="3" placeholder="Pega aquí la respuesta de Claude" class="w-full p-2 border rounded-lg text-xs mb-2"></textarea>
+      <button onclick="importarIA()" class="w-full bg-emerald-600 text-white py-2 rounded-lg font-bold text-xs">Importar receta</button>
+    </div>
+    <p id="ia-estado" class="text-xs text-slate-500"></p>
+  </div>
+</div>
+
+<!-- Modal ficha -->
+<div id="m-ficha" class="fixed inset-0 bg-black/60 hidden z-50 items-end sm:items-center justify-center">
+  <div class="bg-white rounded-t-2xl sm:rounded-2xl max-w-lg w-full p-4 max-h-[92vh] overflow-y-auto">
+    <div class="flex justify-between mb-1"><h3 class="font-bold">Ficha del producto</h3><button onclick="cerrar('m-ficha')" class="text-slate-400 text-xl"><i class="fa-solid fa-xmark"></i></button></div>
+    <p id="f-aviso" class="text-xs text-slate-500 mb-2"></p>
+    <div class="flex gap-3 mb-3">
+      <img id="f-img" alt="" class="w-20 h-20 object-contain bg-slate-50 rounded hidden">
+      <div class="flex-1 space-y-2"><input id="f-n" placeholder="Nombre" class="w-full p-2 border rounded-lg text-sm"><input id="f-marca" placeholder="Marca" class="w-full p-2 border rounded-lg text-sm"></div>
+    </div>
+    <div class="grid grid-cols-2 gap-2 mb-2 text-xs font-bold text-slate-600">
+      <label>Cantidad<input id="f-cant" class="w-full p-2 border rounded-lg mt-1 font-normal text-sm"></label>
+      <label>Unidades<input type="number" id="f-ud" min="1" value="1" class="w-full p-2 border rounded-lg mt-1 font-normal text-sm"></label>
+      <label>Ubicación<select id="f-cat" class="w-full p-2 border rounded-lg mt-1 font-normal text-sm bg-white"><option value="despensa-cocina">Despensa Cocina</option><option value="despensa-sotano">Despensa Sótano</option><option value="congelador-cocina">Congelador Cocina</option><option value="congelador-sotano">Congelador Sótano</option></select></label>
+      <label>Caducidad<input type="date" id="f-cad" class="w-full p-2 border rounded-lg mt-1 font-normal text-sm"></label>
+    </div>
+    <div class="flex gap-1 mb-3 text-[11px]">
+      <button onclick="sumaCad(7)" class="bg-slate-100 rounded px-2 py-1">+7 d</button><button onclick="sumaCad(30)" class="bg-slate-100 rounded px-2 py-1">+30 d</button>
+      <button onclick="sumaCad(180)" class="bg-slate-100 rounded px-2 py-1">+6 m</button><button onclick="sumaCad(365)" class="bg-slate-100 rounded px-2 py-1">+1 año</button>
+    </div>
+    <div id="f-info" class="text-xs text-slate-600 space-y-2 mb-3"></div>
+    <div class="flex gap-2">
+      <button id="f-del" onclick="borrarFicha()" class="hidden px-4 py-2.5 rounded-xl bg-red-50 text-red-600 text-sm font-bold">Eliminar</button>
+      <button onclick="guardarFicha()" class="flex-1 bg-emerald-600 text-white py-2.5 rounded-xl font-bold text-sm">Guardar en ubicación elegida</button>
+    </div>
+    <p class="text-[10px] text-slate-400 mt-2">Datos de productos: Open Food Facts y proyectos hermanos (licencia ODbL). Pueden estar incompletos o ser incorrectos: revisa la etiqueta, sobre todo los alérgenos.</p>
+  </div>
+</div>
+
+<!-- Modal escáner -->
+<div id="m-scan" class="fixed inset-0 bg-black/80 hidden z-50 items-center justify-center p-4">
+  <div class="bg-white rounded-2xl max-w-md w-full p-4">
+    <div class="flex justify-between mb-2"><h3 class="font-bold text-sm"><i class="fa-solid fa-camera text-emerald-600 mr-1"></i>Escáner de código de barras</h3><button onclick="cerrarScanner()" class="text-slate-400 text-xl"><i class="fa-solid fa-xmark"></i></button></div>
+    <div class="bg-black rounded-xl overflow-hidden relative aspect-video">
+      <video id="video" class="w-full h-full object-cover" autoplay playsinline muted></video>
+      <div class="absolute inset-x-8 top-1/2 -translate-y-1/2 h-16 border-2 border-emerald-400 rounded-lg pointer-events-none"></div>
+    </div>
+    <div class="grid grid-cols-2 gap-2 mt-2"><button id="sm-alta" onclick="scanModo('alta')" class="py-2 rounded-lg text-xs font-bold">Añadir producto</button><button id="sm-baja" onclick="scanModo('baja')" class="py-2 rounded-lg text-xs font-bold">Dar de baja</button></div>
+    <p id="scan-msg" class="text-xs text-slate-500 my-2">Iniciando cámara…</p>
+    <label class="block text-center bg-slate-100 rounded-lg py-2 text-xs font-bold text-slate-700 mb-2"><i class="fa-solid fa-camera-retro mr-1"></i>Hacer foto al código (si la cámara en vivo falla)
+      <input type="file" accept="image/*" capture="environment" class="hidden" onchange="decodeFoto(this)"></label>
+    <div class="flex gap-2">
+      <input id="scan-manual" inputmode="numeric" placeholder="O escribe el código" class="flex-1 p-2 border rounded-lg text-sm">
+      <button onclick="procesarCodigo(document.getElementById('scan-manual').value.trim())" class="bg-emerald-600 text-white px-4 rounded-lg text-sm font-bold">OK</button>
+    </div>
+  </div>
+</div>
+<script src="assets/js/modules/01-core.js"></script>
+<script src="assets/js/modules/02-inventory-sync.js"></script>
+<script src="assets/js/modules/03-recipe-import-batch.js"></script>
+<script src="assets/js/modules/04-ticket-reader.js"></script>
+<script src="assets/js/modules/05-defrost-planner.js"></script>
+<script src="assets/js/modules/06-school-and-menu-tools.js"></script>
+<script src="assets/js/modules/07-recipe-matching.js"></script>
+<script src="assets/js/modules/08-chef-recipes.js"></script>
+<script src="assets/js/modules/09-recipe-step-fixes.js"></script>
+<script src="assets/js/modules/10-renombrar-alimentos.js"></script>
+<script src="assets/js/modules/11-importacion-ia.js"></script>
+<script src="assets/js/modules/12-salvavidas.js"></script>
+<script src="assets/js/modules/13-elementos-visuales.js"></script>
+<script src="assets/js/modules/14-cocina-y-codigos-barras.js"></script>
+<script type="module" src="assets/js/services/firebase.js"></script>
+<script src="assets/js/modules/15-menus-configurables.js"></script>
+
+<!-- Receta exacta desde un plato del menú -->
+<div id="m-menu-receta" class="fixed inset-0 bg-black/50 hidden z-[70] items-end sm:items-center justify-center">
+ <div class="bg-white rounded-t-2xl sm:rounded-2xl max-w-lg w-full p-5 max-h-[92vh] overflow-y-auto text-sm">
+  <div class="flex justify-between items-center mb-2"><h3 class="font-bold">Receta del plato del menú</h3><button onclick="cerrar('m-menu-receta')" class="text-xl text-slate-400">✕</button></div>
+  <p class="text-xs text-slate-600 mb-2">Plato solicitado: <b id="mr-plato"></b></p>
+  <p class="text-xs text-slate-500 mb-2">Copia esta petición en ChatGPT, Claude o Gemini. La petición exige preparar exactamente el plato seleccionado, no una receta distinta.</p>
+  <textarea id="mr-prompt" rows="7" class="w-full p-2 border rounded-lg text-xs mb-2" readonly></textarea>
+  <button onclick="copiarMenuRecipePrompt()" class="w-full bg-slate-800 text-white py-2 rounded-lg font-bold text-xs mb-3">Copiar petición</button>
+  <label class="block text-xs font-bold mb-1">Pega aquí la receta que te devuelva la IA</label>
+  <textarea id="mr-respuesta" rows="6" class="w-full p-2 border rounded-lg text-xs mb-2" placeholder="Pega aquí la receta en formato JSON..."></textarea>
+  <button onclick="importarMenuRecipe()" class="w-full bg-emerald-600 text-white py-2 rounded-lg font-bold text-xs">Comprobar y guardar receta</button>
+  <p id="mr-estado" class="text-xs text-slate-500 mt-2"></p>
+ </div>
+</div>
+<script src="assets/js/modules/16-recetas-exactas-del-menu.js"></script>
+</body>
+</html>
