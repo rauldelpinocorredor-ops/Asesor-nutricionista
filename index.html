@@ -52,7 +52,7 @@ tailwind.config = { theme: { extend: {
       <button onclick="tab('despensa')" class="home-card"><i class="fa-solid fa-basket-shopping"></i><span>Despensa</span></button>
       <button onclick="tab('chef')" class="home-card"><i class="fa-solid fa-kitchen-set"></i><span>Chef</span></button>
       <button onclick="tab('nutri')" class="home-card"><i class="fa-solid fa-apple-whole"></i><span>Nutrición</span></button>
-      <button onclick="tab('training')" class="home-card"><i class="fa-solid fa-dumbbell"></i><span>Training</span></button>
+      <button onclick="abrirPumped()" class="home-card"><i class="fa-solid fa-dumbbell"></i><span>Training</span></button>
     </div>
   </div>
 </section>
@@ -205,7 +205,7 @@ tailwind.config = { theme: { extend: {
   <button onclick="tab('despensa')" id="n-despensa" class="flex flex-col items-center text-emerald-600"><i class="fa-solid fa-basket-shopping text-lg"></i><span class="text-[10px] font-bold">Despensa</span></button>
   <button onclick="tab('chef')" id="n-chef" class="flex flex-col items-center text-slate-400"><i class="fa-solid fa-kitchen-set text-lg"></i><span class="text-[10px] font-bold">Chef</span></button>
   <button onclick="tab('nutri')" id="n-nutri" class="flex flex-col items-center text-slate-400"><i class="fa-solid fa-apple-whole text-lg"></i><span class="text-[10px] font-bold">Nutrición</span></button>
-  <button onclick="tab('training')" id="n-training" class="flex flex-col items-center text-slate-400"><i class="fa-solid fa-dumbbell text-lg"></i><span class="text-[10px] font-bold">Training</span></button>
+  <button id="n-training" class="flex flex-col items-center text-slate-400"><i class="fa-solid fa-dumbbell text-lg"></i><span class="text-[10px] font-bold">Training</span></button>
 </nav>
 
 <!-- Login -->
@@ -438,5 +438,6 @@ tailwind.config = { theme: { extend: {
  </div>
 </div>
 <script src="assets/js/modules/16-recetas-exactas-del-menu.js"></script>
+<script src="assets/js/modules/17-training-pumped.js"></script>
 </body>
 </html>
