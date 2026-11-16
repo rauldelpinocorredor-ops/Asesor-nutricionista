@@ -37,6 +37,8 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .loc-button.loc-cart{width:100%;background:#7A2E5F;color:#fff;border-color:#7A2E5F}
 .loc-button.loc-cart i{color:#fff}
 .loc-line-cart{grid-template-columns:1fr}
+.loc-button.loc-fridge{width:100%;background:#2C79B5;color:#fff;border-color:#2C79B5}
+.loc-button.loc-fridge i{color:#fff}
 body{padding-top:env(safe-area-inset-top);padding-bottom:calc(5rem + env(safe-area-inset-bottom))}
 nav{padding-bottom:calc(.5rem + env(safe-area-inset-bottom))}
 input,select,button{font-size:16px} /* evita zoom en iOS */
