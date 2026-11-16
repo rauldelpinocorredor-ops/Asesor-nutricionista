@@ -54,6 +54,7 @@ tailwind.config = { theme: { extend: {
       <button onclick="tab('nutri')" class="home-card"><i class="fa-solid fa-apple-whole"></i><span>Nutrición</span></button>
       <button onclick="abrirPumped()" class="home-card"><i class="fa-solid fa-dumbbell"></i><span>Training</span></button>
     </div>
+    <button onclick="abrirAlexa()" class="w-full mt-3 bg-sky-800 hover:bg-sky-900 text-white rounded-xl py-3 font-bold text-sm"><i class="fa-brands fa-amazon mr-2"></i>Vincular con Alexa</button>
   </div>
 </section>
 
@@ -216,6 +217,22 @@ tailwind.config = { theme: { extend: {
     <input id="l-p" type="password" placeholder="Contraseña" autocomplete="current-password" class="w-full p-3 border rounded-lg mb-2">
     <button onclick="entrar()" class="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold">Entrar</button>
     <p id="l-err" class="text-xs text-red-600 mt-2"></p>
+  </div>
+</div>
+
+<!-- Vinculación de Alexa -->
+<div id="m-alexa" class="fixed inset-0 bg-black/50 hidden z-[80] items-center justify-center p-4">
+  <div class="bg-white rounded-2xl max-w-sm w-full p-5 shadow-xl">
+    <div class="flex justify-between items-center mb-3"><h3 class="font-bold text-lg text-slate-800"><i class="fa-brands fa-amazon text-sky-800 mr-2"></i>Vincular con Alexa</h3><button onclick="cerrarAlexa()" class="text-slate-400 text-xl" aria-label="Cerrar">×</button></div>
+    <p class="text-sm text-slate-600 mb-3">Genera un código temporal y díselo a Alexa. Caduca en cinco minutos y solo se puede usar una vez.</p>
+    <p class="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg p-3 mb-3">Al vincular, Alexa guardará en su alojamiento gestionado un token de Firebase que permite consultar y modificar tu inventario y tus recetas. No compartas el código con nadie.</p>
+    <button id="alexa-code-button" onclick="crearCodigoAlexa()" class="w-full bg-sky-800 text-white py-3 rounded-xl font-bold">Generar código temporal</button>
+    <div id="alexa-code-result" class="hidden mt-3 text-center">
+      <p class="text-xs text-slate-500 mb-1">Dile a Alexa: «vincula mi cuenta con el código…»</p>
+      <p id="alexa-code" class="font-mono text-lg tracking-wide font-bold text-slate-900 break-words"></p>
+      <p id="alexa-code-expiry" class="text-xs text-slate-500 mt-1"></p>
+    </div>
+    <p id="alexa-code-error" class="text-xs text-red-600 mt-2" role="alert"></p>
   </div>
 </div>
 
@@ -439,5 +456,6 @@ tailwind.config = { theme: { extend: {
 </div>
 <script src="assets/js/modules/16-recetas-exactas-del-menu.js"></script>
 <script src="assets/js/modules/17-training-pumped.js"></script>
+<script src="assets/js/modules/18-alexa-link.js"></script>
 </body>
 </html>
