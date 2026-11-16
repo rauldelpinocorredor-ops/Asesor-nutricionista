@@ -1,5 +1,5 @@
-const V = 'nutri-v24';
-const CORE = ['./', 'index.html', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png'];
+const V = 'nutri-v25';
+const CORE = ['./', 'index.html', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'assets/js/modules/18-alexa-link.js'];
 const EXT = [
   'https://cdn.tailwindcss.com/3.4.17',
   'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',
