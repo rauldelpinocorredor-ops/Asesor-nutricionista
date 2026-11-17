@@ -21,6 +21,10 @@ async function crearCodigoAlexa() {
   const button = document.getElementById('alexa-code-button');
   const result = document.getElementById('alexa-code-result');
   const error = document.getElementById('alexa-code-error');
+  if (alexaCodeTimer) clearInterval(alexaCodeTimer);
+  alexaCodeTimer = null;
+  if (activeAlexaPairingCode) await fb.deleteAlexaPairingCode(activeAlexaPairingCode).catch(() => {});
+  activeAlexaPairingCode = '';
   button.disabled = true;
   button.textContent = 'Creando código…';
   error.textContent = '';
