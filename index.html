@@ -108,6 +108,7 @@ tailwind.config = { theme: { extend: {
       <summary class="p-3 text-sm font-bold text-slate-700 cursor-pointer select-none">Ingredientes de tu despensa <span id="chef-n" class="text-emerald-700 font-normal"></span></summary>
       <div class="px-3 pb-3"><div id="chef-sel" class="flex flex-wrap gap-2 min-h-[40px]"></div><button onclick="limpiaSel()" class="text-xs underline text-slate-500 mt-2">Quitar la selección</button></div>
     </details>
+    <button id="bc-toggle" type="button" class="w-full bg-amber-500 text-white py-2.5 rounded-xl font-bold text-sm mb-3">🍲 Planificar Batch Cooking</button>
     <div class="grid grid-cols-2 gap-2 mb-2">
       <button onclick="buscarRecetas()" class="bg-emerald-600 text-white py-2.5 rounded-xl font-medium text-sm">Buscar recetas</button>
       <button onclick="abrirIA()" class="bg-indigo-600 text-white py-2.5 rounded-xl font-medium text-sm"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i>Preguntar a una IA</button>
@@ -116,6 +117,19 @@ tailwind.config = { theme: { extend: {
     <button onclick="buscarRecetas(true)" class="w-full text-xs text-slate-500 underline mb-3">Ver todas las recetas</button>
     <button onclick="verFavs()" class="w-full text-xs text-slate-500 underline mb-3">♥ Mis favoritas</button>
     <button onclick="abrir('m-lote')" class="w-full text-xs text-indigo-600 underline mb-3">Añadir muchas recetas con IA (importación en lote)</button>
+    <div id="bc-panel" class="hidden bg-amber-50 border border-amber-200 rounded-xl p-3 mb-4">
+      <h3 class="font-bold text-amber-950 mb-1">Plan conjunto de recetas</h3>
+      <p class="text-xs text-amber-900 mb-3">Selecciona recetas y raciones para preparar una vista previa. Solo se solapan pasos si todos tienen duración y caben dentro de una espera detectada. El horario es provisional y requiere revisión.</p>
+      <button id="bc-source" type="button" class="w-full bg-white border border-amber-300 text-amber-950 py-2 rounded-lg font-bold text-xs mb-2">Usar recetas de demostración local</button>
+      <p id="bc-source-note" class="text-xs text-amber-900 mb-3">Las recetas de demostración son temporales; puedes activarlas sin guardar nada en tu cuenta.</p>
+      <label for="bc-search" class="block text-xs font-bold text-amber-950 mb-1">Buscar recetas</label>
+      <input id="bc-search" type="search" autocomplete="off" placeholder="Una o varias palabras: albóndigas, olla express…" class="w-full p-2 border border-amber-300 rounded-lg bg-white text-sm mb-2">
+      <p class="text-[11px] text-amber-900 mb-2">Busca en el nombre, categoría, dieta, ingredientes y pasos. Puedes combinar palabras.</p>
+      <div id="bc-recipes" class="space-y-2"></div>
+      <label class="flex items-center justify-between gap-2 text-xs mt-3">Hora de inicio (09:00 por defecto, editable) <input id="bc-start" type="time" value="09:00" class="p-2 border rounded-lg bg-white"></label>
+      <button id="bc-create" type="button" class="w-full bg-amber-700 text-white py-2 rounded-lg font-bold text-sm mt-3">Crear vista previa</button>
+      <div id="bc-preview" class="mt-3"></div>
+    </div>
     <div id="chef-res" class="space-y-2"></div>
   </div>
 </section>
@@ -457,5 +471,6 @@ tailwind.config = { theme: { extend: {
 <script src="assets/js/modules/16-recetas-exactas-del-menu.js"></script>
 <script src="assets/js/modules/17-training-pumped.js"></script>
 <script src="assets/js/modules/18-alexa-link.js"></script>
+<script src="assets/js/modules/19-batch-cooking.js"></script>
 </body>
 </html>
