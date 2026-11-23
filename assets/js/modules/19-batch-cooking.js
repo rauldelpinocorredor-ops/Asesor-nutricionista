@@ -103,6 +103,61 @@
     return { measured: [...grouped.values()], unmeasured: [...new Set(unmeasured)] };
   }
 
+  const canonicalIngredientName = value => {
+    let name = sinAc(value).replace(/\s+/g, ' ').trim();
+    const aliases = typeof ALIAS !== 'undefined' && Array.isArray(ALIAS) ? ALIAS : [];
+    const seen = new Set();
+    for (let i = 0; i < aliases.length; i++) {
+      if (seen.has(name)) break;
+      seen.add(name);
+      const alias = aliases.find(row => sinAc(row.de).replace(/\s+/g, ' ').trim() === name);
+      if (!alias) break;
+      name = sinAc(alias.a).replace(/\s+/g, ' ').trim();
+    }
+    return name;
+  };
+  function comparableQuantity(quantity, unit) {
+    const normalized = sinAc(unit).trim().replace(/\.$/, '').replace(/\s+/g, ' ');
+    if (!Number.isFinite(Number(quantity)) || !normalized) return null;
+    if (normalized === 'kg') return { value: Number(quantity) * 1000, unit: 'g' };
+    if (normalized === 'g') return { value: Number(quantity), unit: 'g' };
+    if (normalized === 'l') return { value: Number(quantity) * 1000, unit: 'ml' };
+    if (normalized === 'ml') return { value: Number(quantity), unit: 'ml' };
+    if (['ud', 'uds', 'unidad', 'unidades'].includes(normalized)) return { value: Number(quantity), unit: 'ud' };
+    return { value: Number(quantity), unit: normalized };
+  }
+  function ingredientAvailability(ingredient) {
+    if (typeof STOCK === 'undefined' || !Array.isArray(STOCK) || typeof USER === 'undefined' || !USER || typeof STOCK_READY === 'undefined' || !STOCK_READY) {
+      return { state: 'unverified', label: 'No validable', detail: 'Inicia sesión y espera a que cargue el inventario.' };
+    }
+    const name = canonicalIngredientName(ingredient.name);
+    const matches = STOCK.filter(item => item && Number(item.cant) > 0 && canonicalIngredientName(item.prod) === name);
+    if (!matches.length) return { state: 'missing', label: 'Falta', detail: 'No aparece en el inventario.' };
+    if (ingredient.quantity == null || !ingredient.unit) {
+      return { state: 'uncomparable', label: 'No comparable', detail: `Aparece en ${matches.length} ubicación(es), pero la receta no indica cantidad y unidad.` };
+    }
+    const needed = comparableQuantity(ingredient.quantity, ingredient.unit);
+    if (!needed) return { state: 'uncomparable', label: 'No comparable', detail: 'La cantidad o la unidad de la receta no se pueden interpretar.' };
+    const comparable = matches.map(item => comparableQuantity(item.cant, item.ud)).filter(item => item && item.unit === needed.unit);
+    if (!comparable.length) {
+      const stockUnits = [...new Set(matches.map(item => `${fmtQ(item.cant, item.ud)}`))].join(', ');
+      return { state: 'uncomparable', label: 'No comparable', detail: `Hay existencias (${stockUnits}), pero usan unidades incompatibles con ${needed.unit}.` };
+    }
+    const available = comparable.reduce((sum, item) => sum + item.value, 0);
+    const shortfall = Math.max(0, needed.value - available);
+    const hasOtherUnits = comparable.length !== matches.length;
+    if (shortfall <= 1e-6) return { state: 'available', label: 'Disponible', detail: `Hay ${fmtQ(available, needed.unit)} de ${fmtQ(needed.value, needed.unit)} necesarios${hasOtherUnits ? '; se han sumado solo unidades comparables' : ''}.` };
+    if (available > 0) return { state: 'partial', label: 'Parcial', detail: `Hay ${fmtQ(available, needed.unit)}; faltan ${fmtQ(shortfall, needed.unit)}.${hasOtherUnits ? ' Hay otras existencias en unidades incompatibles que no se han sumado.' : ''}` };
+    return { state: 'missing', label: 'Falta', detail: `No hay cantidad comparable; faltan ${fmtQ(needed.value, needed.unit)}.` };
+  }
+  const availabilityStyle = state => ({
+    available: 'bg-emerald-100 text-emerald-800',
+    partial: 'bg-amber-100 text-amber-900',
+    missing: 'bg-rose-100 text-rose-800',
+    uncomparable: 'bg-slate-100 text-slate-700',
+    unverified: 'bg-slate-100 text-slate-700'
+  }[state] || 'bg-slate-100 text-slate-700');
+
   const requiresManualAttention = text => /\b(?:dar(?:le|les|la|las|los)?\s+la vuelta|dale(?:s)?\s+la vuelta|d[áa]ndo(?:le|les)?\s+la vuelta|vuelta a mitad|a mitad de(?:l)? proceso|remover|remueve|removiendo|revolver|revuelve|revolviendo|girar|gira|girando|voltear|voltea|volteando|mover|mueve|moviendo|regar|riega|regando|mezclar|mezcla|mezclando|revisar|revisa|revisando|comprobar|comprueba|controlar|controla|vigilar|vigila|supervisar|supervisión)\b/i.test(text || '');
   const isWaitStep = text => !requiresManualAttention(text) && /\b(?:cuece|cocer|hornea|hornear|reposar|reposa|deja\s+(?:reposar|enfriar)|marina|marinar|enfr[ií]a|enfriar|fermenta|fermentar|a fuego lento|cocina a fuego)\b/i.test(text || '');
   const stepMinutes = step => {
@@ -244,11 +299,18 @@
 
   function buildPreview(selection, overrides = durationOverrides) {
     const { measured, unmeasured } = scaledIngredients(selection);
+    const availabilityRows = [
+      ...measured.map(item => ({ name: item.name, quantity: item.quantity, unit: item.unit })),
+      ...unmeasured.map(name => ({ name, quantity: null, unit: '' }))
+    ].map(item => ({ ...item, availability: ingredientAvailability(item) }));
     const timeline = planTimeline(selection, document.getElementById('bc-start')?.value || '09:00', overrides);
     const unknownSteps = timeline.jobs.flatMap(job => job.steps.filter(step => !step.minutes).map(step => ({ recipe: job.recipe, text: step.text })));
     const ingredientHtml = measured.length
       ? measured.map(item => `<li>${esc(fmtQ(item.quantity, item.unit))} de ${esc(item.name)}</li>`).join('')
       : '<li>No hay cantidades medibles en las recetas seleccionadas.</li>';
+    const availabilityHtml = availabilityRows.length
+      ? availabilityRows.map(item => `<li class="rounded-lg border border-slate-200 bg-white p-2"><div class="flex items-start justify-between gap-2"><span class="font-medium">${item.quantity == null ? '' : `${esc(fmtQ(item.quantity, item.unit))} de `}${esc(item.name)}</span><span class="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${availabilityStyle(item.availability.state)}">${esc(item.availability.label)}</span></div><p class="mt-1 text-slate-600">${esc(item.availability.detail)}</p></li>`).join('')
+      : '<li>No hay ingredientes para comparar.</li>';
     const hasParallel = timeline.entries.some(entry => entry.during);
     const schedule = timeline.complete
       ? `<p class="text-slate-600 mb-2">${hasParallel ? 'Cronograma provisional con tareas que caben dentro de esperas detectadas.' : 'Cronograma secuencial; no se detectaron tareas paralelas que encajen en una espera.'}</p><ol class="list-decimal pl-5 mb-3">${timelineHtml(timeline.entries, document.getElementById('bc-start')?.value || '09:00')}</ol>`
@@ -260,8 +322,9 @@
         <p class="text-slate-500 mt-1 mb-3">${selection.map(x => `${esc(x.recipe.n)} (${x.servings} raciones)`).join(' · ')}</p>
         <h5 class="font-bold">Ingredientes sumados</h5><ul class="list-disc pl-5 mb-3">${ingredientHtml}</ul>
         ${unmeasured.length ? `<p class="text-amber-800 mb-3">Cantidades por revisar: ${unmeasured.map(esc).join(', ')}.</p>` : ''}
+        <h5 class="font-bold mb-1">Disponibilidad en inventario</h5><p class="text-slate-500 mb-2">Comparación informativa por nombre exacto o alias y unidades compatibles; suma ubicaciones y lotes sin modificar existencias.</p><ul class="space-y-2 mb-3">${availabilityHtml}</ul>
         <h5 class="font-bold">${timeline.complete ? 'Cronograma desde ' + esc(document.getElementById('bc-start')?.value || '09:00') : 'Secuencia por receta'}</h5>${schedule}
-        <p class="bg-amber-50 text-amber-900 rounded p-2">Estimación provisional basada en los minutos escritos en cada receta y, cuando los indicas, en tiempos estimados solo para este plan. Los pasos que indican giros, mezclas, revisiones u otras intervenciones requieren atención manual y no se solapan. Revisa supervisión y equipo: el plan no modela conflictos de horno, fogones ni utensilios. Esta vista previa no comprueba existencias, no descuenta stock y no guarda ni ejecuta el plan.</p>
+        <p class="bg-amber-50 text-amber-900 rounded p-2">Estimación provisional basada en los minutos escritos en cada receta y, cuando los indicas, en tiempos estimados solo para este plan. Los pasos que indican giros, mezclas, revisiones u otras intervenciones requieren atención manual y no se solapan. Revisa supervisión y equipo: el plan no modela conflictos de horno, fogones ni utensilios. La disponibilidad es orientativa; esta vista previa no descuenta stock, no modifica recetas y no guarda ni ejecuta el plan.</p>
       </div>`;
     document.getElementById('bc-clear')?.addEventListener('click', () => { previewBox.innerHTML = ''; });
   }

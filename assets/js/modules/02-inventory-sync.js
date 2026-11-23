@@ -9,7 +9,7 @@ const MAPC = { general: 'despensa-cocina', congelados: 'cocina-i1', despensa: 'd
 const normLoc = l => LOC_OLD[l] || l;
 const nombreLoc = l => LOCS[normLoc(l)] || ({ limpieza: 'Limpieza (ubicación anterior)', mascotas: 'Mascotas (ubicación anterior)' }[l] || l);
 const UDN = { ud: 'ud', rac: 'raciones', kg: 'kg', l: 'l' };
-let MOVS = [], COMPRA = [], STOCK = [], VIS = [], USER = null, TAB = 'despensa-cocina', MV = null, CACHE = false;
+let MOVS = [], COMPRA = [], STOCK = [], VIS = [], USER = null, TAB = 'despensa-cocina', MV = null, CACHE = false, STOCK_READY = false;
 const optsLoc = ex => Object.entries(LOCS).filter(([k]) => k !== normLoc(ex)).map(([k, v]) => `<option value="${k}">${esc(v)}</option>`).join('');
 const fmtC = s => (Math.round(s.cant * 1000) / 1000) + ' ' + (UDN[s.ud] || s.ud);
 const grupoDe = l => { l = normLoc(l); return Object.keys(GRP).find(k => GRP[k].includes(l)) || 'despensa-cocina'; };
@@ -115,8 +115,8 @@ function selectorChef() {
 function estado() {
   $('sync-estado').innerHTML = USER ? esc(USER.email) + ' · ' + (!navigator.onLine ? 'sin red (se enviará al volver)' : CACHE ? 'sincronizando…' : 'sincronizado') + ' · <button onclick="fb.logout()" class="underline">salir</button>' : 'Sin sesión';
 }
-window.onUser = u => { USER = u; $('m-login').classList.toggle('hidden', !!u); $('m-login').classList.toggle('flex', !u); estado(); };
-window.onMovs = (l, c) => { MOVS = l; CACHE = c; calcStock(); render(); estado(); };
+window.onUser = u => { USER = u; if (!u) STOCK_READY = false; $('m-login').classList.toggle('hidden', !!u); $('m-login').classList.toggle('flex', !u); estado(); };
+window.onMovs = (l, c) => { MOVS = l; CACHE = c; calcStock(); STOCK_READY = !!USER; render(); estado(); };
 window.onCompra = l => { COMPRA = l.sort((a, b) => (a.hecho - b.hecho) || (a.t - b.t)); render(); };
 addEventListener('online', estado); addEventListener('offline', estado);
 async function entrar() { try { await fb.login($('l-e').value.trim(), $('l-p').value); $('l-p').value = ''; $('l-err').textContent = ''; } catch (e) { $('l-err').textContent = 'No se pudo entrar: ' + (e.code || e.message); } }
