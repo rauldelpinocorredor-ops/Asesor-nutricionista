@@ -44,10 +44,15 @@ window.fb = {
   delReceta: id => deleteDoc(doc(db, 'recetas', id)),
   set: (c, id, d) => setDoc(doc(db, c, id), d), del: (c, id) => deleteDoc(doc(db, c, id))
 };
-let u1, u2, u3, u4, u5, u6, u7;
+let u1, u2, u3, u4, u5, u6, u7, u8;
 onAuthStateChanged(auth, u => {
-  window.onUser(u); if (u1) u1(); if (u2) u2(); if (u3) u3(); if (u4) u4(); if (u5) u5(); if (u6) u6(); if (u7) u7(); u1 = u2 = u3 = u4 = u5 = u6 = u7 = null;
-  if (!u) { window.onMovs([], false); window.onCompra([]); return; }
+  window.onUser(u); if (u1) u1(); if (u2) u2(); if (u3) u3(); if (u4) u4(); if (u5) u5(); if (u6) u6(); if (u7) u7(); if (u8) u8(); u1 = u2 = u3 = u4 = u5 = u6 = u7 = u8 = null;
+  if (!u) {
+    window.onMovs([], false); window.onCompra([]);
+    if (typeof window.onFamilyData === 'function') window.onFamilyData(null, { signedOut: true });
+    else window.__pendingFamilyData = [null, { signedOut: true }];
+    return;
+  }
   cleanupAlexaPairingCodes(u).catch(e => console.warn('No se pudieron limpiar códigos Alexa caducados:', e));
   u1 = onSnapshot(query(collection(db, 'mov'), orderBy('t')), { includeMetadataChanges: true }, sn => window.onMovs(sn.docs.filter(d => okId(d.id)).map(d => ({ id: d.id, ...d.data() })), sn.metadata.fromCache), e => console.error(e));
   u2 = onSnapshot(collection(db, 'compra'), sn => window.onCompra(sn.docs.filter(d => okId(d.id)).map(d => ({ id: d.id, ...d.data() }))), e => console.error(e));
@@ -56,4 +61,11 @@ onAuthStateChanged(auth, u => {
   u5 = onSnapshot(collection(db, 'ignorados'), sn => window.onIgn(sn.docs.filter(d => okId(d.id)).map(d => ({ id: d.id, ...d.data() }))), e => console.error(e));
   u6 = onSnapshot(collection(db, 'colegio'), sn => window.onCole(sn.docs.filter(d => okId(d.id)).map(d => ({ id: d.id, ...d.data() }))), e => console.error(e));
   u7 = onSnapshot(collection(db, 'alias'), sn => window.onAlias(sn.docs.filter(d => okId(d.id)).map(d => ({ id: d.id, ...d.data() }))), e => console.error(e));
+  // Shared household profile, planning settings, rotation history and saved menu snapshot.
+  // One stable document keeps the family configuration in sync across signed-in devices.
+  const deliverFamily = (...args) => {
+    if (typeof window.onFamilyData === 'function') window.onFamilyData(...args);
+    else window.__pendingFamilyData = args;
+  };
+  u8 = onSnapshot(doc(db, 'family', 'main'), sn => deliverFamily(sn.exists() ? { id: sn.id, ...sn.data() } : null), e => deliverFamily(null, e));
 });
