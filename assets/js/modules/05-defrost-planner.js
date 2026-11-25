@@ -1,5 +1,6 @@
 /* ===== v2.3: descongelación planificada y sugerencias de reposición ===== */
 let PLAN = [], IGN = [], SUG = [], PL = null;
+const PLAN_BUSY = new Set();
 const ymd = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
 const enDias = n => { const d = new Date(); d.setDate(d.getDate() + n); return d; };
 const ik = k => encodeURIComponent(k).slice(0, 200);
@@ -14,11 +15,27 @@ function guardarPlan() {
   fb.set('plan', 'p' + Date.now(), { prod: PL.prod, loc: PL.loc, cad: PL.cad || '', cant: q, ud: PL.ud, fecha: f, hecho: false, t: Date.now() });
   cerrar('m-plan');
 }
-function planHecho(id) {
-  const p = PLAN.find(x => x.id === id), loc = normLoc(p.loc), s = STOCK.find(x => x.prod === p.prod && x.loc === loc && x.cad === (p.cad || ''));
+async function planHecho(id) {
+  if (PLAN_BUSY.has(id)) return;
+  const p = PLAN.find(x => x.id === id);
+  if (!p || p.hecho) return;
+  const loc = normLoc(p.loc), s = STOCK.find(x => x.prod === p.prod && x.loc === loc && x.cad === (p.cad || '') && (x.ud || 'ud') === (p.ud || 'ud'));
   if (!s || s.cant < p.cant - 0.0001) return alert('Ya no hay esa cantidad en ' + (LOCS[p.loc] || p.loc) + '. Revisa el inventario o quita el aviso.');
-  mov({ prod: s.prod, cod: s.cod || '', cant: p.cant, ud: s.ud, cad: s.cad, fmt: s.fmt || '', img: s.img || '', ns: s.ns || '', de: loc, a: 'despensa-cocina', tipo: 'mov', nota: 'descongelación' });
-  const { id: _, ...d } = p; fb.set('plan', id, { ...d, loc, hecho: true });
+  PLAN_BUSY.add(id);
+  const movementId = 'defrost-' + String(id).replace(/[^\w%.~-]/g, '').slice(0, 180);
+  const movement = { t: Date.now(), por: USER ? USER.email : '', prod: s.prod, cod: s.cod || '', cant: p.cant, ud: s.ud, cad: s.cad, recordatorio: s.recordatorio || '', recordatorioFuente: s.recordatorioFuente || '', recordatorioCategoria: s.recordatorioCategoria || '', fmt: s.fmt || '', img: s.img || '', ns: s.ns || '', marca: s.marca || '', fechaCongelacion: null, de: loc, a: 'frigo', tipo: 'descongelar', nota: 'descongelación', sourcePlanId: id };
+  try {
+    // A stable document ID makes retries safe if movement write succeeded but
+    // marking the plan complete failed or the client lost its response.
+    await fb.set('mov', movementId, movement);
+    const { id: _, ...d } = p;
+    await fb.set('plan', id, { ...d, loc, hecho: true, thawMovementId: movementId });
+  } catch (error) {
+    alert('No se pudo completar la descongelación. El aviso sigue pendiente; vuelve a intentarlo.');
+  } finally {
+    PLAN_BUSY.delete(id);
+    pintaAvisos();
+  }
 }
 function pintaAvisos() {
   const hoy = ymd(new Date()), man = ymd(enDias(1)), L = PLAN.filter(p => !p.hecho).sort((a, b) => a.fecha.localeCompare(b.fecha));
@@ -55,3 +72,32 @@ const _render = render; render = function () { calcSug(); GN.compra = '🛒 Comp
 const _pintaCompra = pintaCompra; pintaCompra = function () { _pintaCompra(); $('lista').insertAdjacentHTML('afterbegin', sugHTML()); };
 window.onPlan = l => { PLAN = l.map(p => ({ ...p, loc: normLoc(p.loc) })); render(); };
 window.onIgn = l => { IGN = l; render(); };
+
+/* Antigüedad en congelador: umbral elegido por el hogar, no una fecha de seguridad. */
+const FREEZER_ALERT_KEY = 'asesor_nutri_freezer_alert_days_v1';
+function freezerAlertDays() {
+  try { const n = Number(localStorage.getItem(FREEZER_ALERT_KEY)); return Number.isInteger(n) && n >= 1 && n <= 3650 ? n : 0; } catch (e) { return 0; }
+}
+function guardarAvisoCongelacion() {
+  const n = Number($('freezer-alert-days')?.value);
+  if (!Number.isInteger(n) || n < 1 || n > 3650) return alert('Indica un umbral entre 1 y 3650 días.');
+  try { localStorage.setItem(FREEZER_ALERT_KEY, String(n)); } catch (e) { return alert('No se pudo guardar el umbral en este dispositivo.'); }
+  pintaAvisos();
+}
+function quitarAvisoCongelacion() {
+  try { localStorage.removeItem(FREEZER_ALERT_KEY); } catch (e) {}
+  pintaAvisos();
+}
+const _pintaAvisosFreezer = pintaAvisos;
+pintaAvisos = function () {
+  _pintaAvisosFreezer();
+  const dias = freezerAlertDays(), hoy = Date.now();
+  const congelados = (STOCK || []).filter(s => /^(cocina-|sotano-)/.test(normLoc(s.loc)) && Number(s.fechaCongelacion));
+  const antiguos = dias ? congelados.filter(s => Math.floor((hoy - Number(s.fechaCongelacion)) / 86400000) >= dias).sort((a,b) => a.fechaCongelacion - b.fechaCongelacion) : [];
+  const html = `<div class="bg-sky-50 border border-sky-200 rounded-xl p-3 text-xs mt-2"><p class="font-bold text-sky-900 mb-1">Antigüedad en el congelador</p>
+    <p class="text-sky-900 mb-2">${dias ? `Aviso configurado a partir de ${dias} días. Es un recordatorio doméstico, no una fecha de caducidad ni una garantía de seguridad.` : 'Configura cuántos días quieres que pasen antes de mostrar un recordatorio. No se asigna un plazo universal.'}</p>
+    <div class="flex gap-2"><input id="freezer-alert-days" type="number" min="1" max="3650" value="${dias || ''}" placeholder="Días" class="w-24 p-2 border rounded-lg bg-white"><button onclick="guardarAvisoCongelacion()" class="bg-sky-700 text-white px-3 rounded-lg font-bold">Guardar</button>${dias ? '<button onclick="quitarAvisoCongelacion()" class="underline text-slate-600">Quitar</button>' : ''}</div>
+    ${antiguos.length ? `<div class="mt-3 border-t border-sky-200 pt-2"><p class="font-bold text-amber-800 mb-1">Revisa estos alimentos</p>${antiguos.map(s => `<p class="py-1">${esc(s.prod)} · ${Math.floor((hoy - Number(s.fechaCongelacion)) / 86400000)} días · ${esc(nombreLoc(s.loc))}</p>`).join('')}</div>` : ''}
+    <p class="text-[10px] text-sky-800 mt-2">Se muestra la fecha del movimiento más antiguo registrado para esa ubicación y producto. Los plazos orientativos varían por alimento y se refieren a calidad: consulta <a class="underline" href="https://www.aesan.gob.es/AECOSAN/docs/documentos/publicaciones/seguridad_alimentaria/congelar_descongelar.pdf" target="_blank" rel="noopener">la guía de AESAN</a>.</p></div>`;
+  $('avisos')?.insertAdjacentHTML('beforeend', html);
+};

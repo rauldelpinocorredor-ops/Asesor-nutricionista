@@ -85,12 +85,12 @@ function parseReceta(txt) {
   if (!j.nombre || !p.length) throw new Error('la receta está incompleta.');
   return { id: 'ia', n: String(j.nombre).slice(0, 80), rac: +j.raciones || 2, i: (Array.isArray(j.ingredientes) ? j.ingredientes : []).slice(0, 40).map(normIng).filter(g => g.n), p, tipo: String(j.tipo || '').slice(0, 20), dietas: Array.isArray(j.dietas) ? j.dietas.slice(0, 6).map(v => String(v).slice(0, 20)) : [] };
 }
-function formReceta(id) { editId = id || null; const r = id ? getRec(id) : null; $('rf-n').value = r ? r.n : ''; $('rf-i').value = r && r.i ? r.i.map(normIng).map(ingTxt).join('\n') : ''; $('rf-p').value = r ? r.p.map(x => x.t).join('\n') : ''; cerrar('m-receta'); abrir('m-form'); }
+function formReceta(id) { editId = id || null; const r = id ? getRec(id) : null; $('rf-n').value = r ? r.n : ''; $('rf-base').value = r ? r.baseId || '' : ''; $('rf-i').value = r && r.i ? r.i.map(normIng).map(ingTxt).join('\n') : ''; $('rf-p').value = r ? r.p.map(x => x.t).join('\n') : ''; cerrar('m-receta'); abrir('m-form'); }
 function guardarForm() {
   const n = $('rf-n').value.trim(), i = lineas($('rf-i').value).map(parseIng), p = lineas($('rf-p').value);
   if (!n || !p.length) return alert('Pon un nombre y al menos un paso.');
   const old = editId ? getRec(editId) : null, prev = old ? (old.i || []).map(normIng) : [];
-  const r = { ...(old || {}), id: editId || 'c' + Date.now(), n, rac: old ? (+old.rac || 2) : 2, i: i.map(g => { const o = prev.find(x => sinAc(x.n) === sinAc(g.n)); return { ...g, k: o ? o.k : null }; }), p: p.map(t => ({ t, m: minDe(t) })) };
+  const r = { ...(old || {}), id: editId || 'c' + Date.now(), n, baseId: $('rf-base').value.trim().slice(0,60), rac: old ? (+old.rac || 2) : 2, i: i.map(g => { const o = prev.find(x => sinAc(x.n) === sinAc(g.n)); return { ...g, k: o ? o.k : null }; }), p: p.map(t => ({ t, m: minDe(t) })) };
   guardaRec(r); S.rec = editId ? S.rec.map(x => x.id === editId ? r : x) : [...S.rec, r]; cerrar('m-form'); verReceta(r.id);
 }
 function guardarIA() { const r = { ...RIA, id: 'c' + Date.now() }; guardaRec(r); S.rec = [...S.rec, r]; verReceta(r.id); }
