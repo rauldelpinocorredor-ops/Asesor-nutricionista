@@ -1,5 +1,5 @@
-const V = 'nutri-v26';
-const CORE = ['./', 'index.html', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'assets/js/modules/18-alexa-link.js', 'assets/js/modules/19-batch-cooking.js'];
+const V = 'nutri-v34';
+const CORE = ['./', 'index.html', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'assets/js/modules/18-alexa-link.js', 'assets/js/modules/19-batch-cooking.js', 'assets/js/modules/20-family-planning.js', 'assets/js/modules/21-voice-workflows.js', 'assets/js/modules/22-stock-editor.js', 'assets/js/modules/23-storage-guidance.js'];
 const EXT = [
   'https://cdn.tailwindcss.com/3.4.17',
   'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',

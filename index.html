@@ -86,6 +86,10 @@ tailwind.config = { theme: { extend: {
         <select id="p-ud" class="p-2 border rounded-lg bg-white"><option value="ud">unidades</option><option value="rac">raciones</option><option value="kg">kg</option><option value="l">litros</option></select>
         <select id="p-cat" class="col-span-2 p-2 border rounded-lg bg-white"></select>
         <input type="date" id="p-cad" class="col-span-2 p-2 border rounded-lg bg-white">
+        <label class="col-span-2 text-xs">Estado/categoría para sugerir orientación<select id="p-rec-category" class="w-full p-2 border rounded-lg mt-1 bg-white text-sm"><option value="">No especificado</option><option value="poultry_raw">Pollo o pavo crudo</option><option value="ground_raw">Carne picada cruda</option><option value="fish_fresh">Pescado o marisco fresco</option><option value="meat_cut_raw">Corte fresco de vacuno, cerdo o cordero</option><option value="cooked_leftovers">Sopa, guiso o sobras cocinadas</option></select></label>
+        <label class="col-span-2 text-xs">Recordatorio de consumo (manual/orientativo)<input type="date" id="p-rec" onchange="document.getElementById('p-rec-source').value=''" class="w-full p-2 border rounded-lg mt-1 bg-white"></label><input type="hidden" id="p-rec-source">
+        <button type="button" onclick="sugerirCaducidadManual()" class="col-span-2 text-left text-[11px] underline text-sky-800">Sugerir recordatorio de conservación refrigerada</button>
+        <p class="col-span-2 text-[10px] text-slate-500">Este recordatorio no es la caducidad del producto. La etiqueta prevalece; orientación solo para alimentos reconocidos en frigorífico a 4 °C o menos. <a class="underline" href="https://www.foodsafety.gov/food-safety-charts/cold-food-storage-charts" target="_blank" rel="noopener">Fuente oficial: FoodSafety.gov</a>.</p>
         <button onclick="altaManual()" class="col-span-2 bg-emerald-600 text-white p-2 rounded-lg text-sm font-bold">Guardar en la ubicación seleccionada</button>
       </div>
     </div>
@@ -120,6 +124,7 @@ tailwind.config = { theme: { extend: {
     <div id="bc-panel" class="hidden bg-amber-50 border border-amber-200 rounded-xl p-3 mb-4">
       <h3 class="font-bold text-amber-950 mb-1">Plan conjunto de recetas</h3>
       <p class="text-xs text-amber-900 mb-3">Selecciona recetas y raciones para preparar una vista previa. Solo se solapan pasos si todos tienen duración y caben dentro de una espera detectada. El horario es provisional y requiere revisión.</p>
+      <p id="bc-menu-origin" class="hidden text-xs text-emerald-900 bg-emerald-100 rounded-lg p-2 mb-3" role="status" aria-live="polite"></p>
       <button id="bc-source" type="button" class="w-full bg-white border border-amber-300 text-amber-950 py-2 rounded-lg font-bold text-xs mb-2">Usar recetas de demostración local</button>
       <p id="bc-source-note" class="text-xs text-amber-900 mb-3">Las recetas de demostración son temporales; puedes activarlas sin guardar nada en tu cuenta.</p>
       <label for="bc-search" class="block text-xs font-bold text-amber-950 mb-1">Buscar recetas</label>
@@ -277,6 +282,7 @@ tailwind.config = { theme: { extend: {
   <div class="bg-white rounded-t-2xl sm:rounded-2xl max-w-lg w-full p-5 max-h-[92vh] overflow-y-auto">
     <div class="flex justify-between mb-2"><h3 class="font-bold">Mi receta</h3><button onclick="cerrar('m-form')" class="text-slate-400 text-xl"><i class="fa-solid fa-xmark"></i></button></div>
     <input id="rf-n" placeholder="Nombre de la receta" class="w-full p-2 border rounded-lg text-sm mb-2">
+    <label class="block text-xs text-slate-600 mb-2">Grupo de plato base (opcional)<input id="rf-base" placeholder="Ej. lentejas-base" class="w-full p-2 border rounded-lg text-sm mt-1"><span class="text-[10px]">Usa el mismo identificador en la receta común y en su variante; solo se sugerirán juntas si coinciden dieta y preferencias.</span></label>
     <textarea id="rf-i" rows="4" placeholder="Ingredientes (uno por línea)&#10;200 g de arroz&#10;1 cebolla" class="w-full p-2 border rounded-lg text-sm mb-2"></textarea>
     <textarea id="rf-p" rows="6" placeholder="Pasos (uno por línea)&#10;Sofríe la cebolla 5 min&#10;Añade el arroz y cuece 18 min" class="w-full p-2 border rounded-lg text-sm mb-1"></textarea>
     <p class="text-[11px] text-slate-400 mb-3">Si un paso incluye un tiempo (por ejemplo «10 min» o «3-4 minutos»), aparecerá un botón de temporizador.</p>
@@ -345,7 +351,7 @@ tailwind.config = { theme: { extend: {
     <div id="tk-lista"></div>
     <div id="tk-conf" class="hidden">
       <label class="text-xs font-bold text-slate-600">Caducidad común (opcional)<input type="date" id="tk-cad" class="w-full p-2 border rounded-lg mt-1 mb-2 font-normal"></label>
-      <p class="text-[11px] text-slate-400 mb-2">Desmarca las líneas que no quieras añadir. La ubicación es una sugerencia por palabras clave: cámbiala si no acierta.</p>
+      <p class="text-[11px] text-slate-400 mb-2">Desmarca las líneas que no quieras añadir. La ubicación es una sugerencia por palabras clave: cámbiala si no acierta. Los plazos orientativos se basan en conservación a 4 °C o menos; <a class="underline" href="https://www.foodsafety.gov/food-safety-charts/cold-food-storage-charts" target="_blank" rel="noopener">consulta la fuente oficial</a>. La etiqueta prevalece.</p>
       <button onclick="tkConfirmar()" class="w-full bg-emerald-600 text-white py-2.5 rounded-xl font-bold">Añadir seleccionados al inventario</button>
     </div>
   </div>
@@ -472,5 +478,9 @@ tailwind.config = { theme: { extend: {
 <script src="assets/js/modules/17-training-pumped.js"></script>
 <script src="assets/js/modules/18-alexa-link.js"></script>
 <script src="assets/js/modules/19-batch-cooking.js"></script>
+<script src="assets/js/modules/20-family-planning.js"></script>
+<script src="assets/js/modules/21-voice-workflows.js"></script>
+<script src="assets/js/modules/22-stock-editor.js"></script>
+<script src="assets/js/modules/23-storage-guidance.js"></script>
 </body>
 </html>
